@@ -4,8 +4,13 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import dns from "dns";
 
 dotenv.config();
+
+// Force Node to prefer IPv4. This can help on hosts where smtp.gmail.com
+// resolves IPv6 first and the connection hangs until timeout.
+dns.setDefaultResultOrder("ipv4first");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -73,26 +78,38 @@ function requiredEnv(name) {
   return value;
 }
 
+const smtpHost = requiredEnv("SMTP_HOST");
+const smtpPort = Number(process.env.SMTP_PORT || 465);
+const smtpSecure = String(process.env.SMTP_SECURE || "true") === "true";
+
 const transporter = nodemailer.createTransport({
-  host: requiredEnv("SMTP_HOST"),
-  port: Number(process.env.SMTP_PORT || 465),
-  secure: String(process.env.SMTP_SECURE || "true") === "true",
+  host: smtpHost,
+  port: smtpPort,
+  secure: smtpSecure,
+
+  // Force IPv4 for SMTP connection.
+  family: 4,
+
   auth: {
     user: requiredEnv("SMTP_USER"),
     pass: requiredEnv("SMTP_PASS")
   },
 
-  // These prevent the request from hanging forever.
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 15000
+  tls: {
+    servername: smtpHost
+  },
+
+  // Prevent infinite hanging.
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000
 });
 
 app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "TechSolutions backend",
-    message: "Backend running. Use /api/health, /api/test-smtp or /api/contact."
+    message: "Backend running. Use /api/health, /api/debug-config, /api/test-smtp or /api/contact."
   });
 });
 
@@ -101,6 +118,24 @@ app.get("/api/health", (_req, res) => {
     ok: true,
     service: "TechSolutions contact backend",
     time: new Date().toISOString()
+  });
+});
+
+app.get("/api/debug-config", (_req, res) => {
+  res.json({
+    ok: true,
+    port: PORT,
+    smtp: {
+      host: process.env.SMTP_HOST || null,
+      port: process.env.SMTP_PORT || null,
+      secure: process.env.SMTP_SECURE || null,
+      user: process.env.SMTP_USER || null,
+      pass_is_set: Boolean(process.env.SMTP_PASS),
+      pass_length: process.env.SMTP_PASS ? process.env.SMTP_PASS.length : 0,
+      mail_to: process.env.MAIL_TO || null,
+      mail_from: process.env.MAIL_FROM || null
+    },
+    allowed_origins: allowedOrigins
   });
 });
 
@@ -113,12 +148,21 @@ app.get("/api/test-smtp", async (_req, res) => {
       message: "SMTP connection verified successfully."
     });
   } catch (error) {
-    console.error("SMTP verify error:", error);
+    console.error("SMTP verify error:", {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode
+    });
 
     res.status(500).json({
       ok: false,
       message: "SMTP verification failed.",
-      error: error.message
+      error: error.message,
+      code: error.code || null,
+      command: error.command || null,
+      responseCode: error.responseCode || null
     });
   }
 });
@@ -192,12 +236,19 @@ ${mensaje}
       message: "Mensaje enviado correctamente."
     });
   } catch (error) {
-    console.error("Contact error:", error);
+    console.error("Contact error:", {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode
+    });
 
     return res.status(500).json({
       ok: false,
       message: "No se pudo enviar el mensaje.",
-      error: error.message
+      error: error.message,
+      code: error.code || null
     });
   }
 });
