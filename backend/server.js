@@ -2,15 +2,9 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import dns from "dns";
 
 dotenv.config();
-
-// Force Node to prefer IPv4. This can help on hosts where smtp.gmail.com
-// resolves IPv6 first and the connection hangs until timeout.
-dns.setDefaultResultOrder("ipv4first");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,7 +20,7 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "20kb" }));
+app.use(express.json({ limit: "30kb" }));
 
 app.use(
   cors({
@@ -78,38 +72,94 @@ function requiredEnv(name) {
   return value;
 }
 
-const smtpHost = requiredEnv("SMTP_HOST");
-const smtpPort = Number(process.env.SMTP_PORT || 465);
-const smtpSecure = String(process.env.SMTP_SECURE || "true") === "true";
+function buildEmailHtml({ nombre, email, servicio, mensaje }) {
+  return `
+    <div style="font-family: Arial, sans-serif; color:#111827; line-height:1.6;">
+      <h2 style="color:#0ea5e9;">Nueva consulta desde TechSolutions</h2>
+      <p><strong>Nombre:</strong> ${nombre}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Servicio:</strong> ${servicio}</p>
+      <p><strong>Mensaje:</strong></p>
+      <div style="white-space:pre-line; background:#f3f4f6; padding:14px; border-radius:10px;">${mensaje}</div>
+    </div>
+  `;
+}
 
-const transporter = nodemailer.createTransport({
-  host: smtpHost,
-  port: smtpPort,
-  secure: smtpSecure,
+function buildEmailText({ nombre, email, servicio, mensaje }) {
+  return `
+Nueva consulta desde la web de TechSolutions
 
-  // Force IPv4 for SMTP connection.
-  family: 4,
+Nombre: ${nombre}
+Email: ${email}
+Servicio: ${servicio}
 
-  auth: {
-    user: requiredEnv("SMTP_USER"),
-    pass: requiredEnv("SMTP_PASS")
-  },
+Mensaje:
+${mensaje}
+`;
+}
 
-  tls: {
-    servername: smtpHost
-  },
+async function sendWithBrevo({ nombre, email, servicio, mensaje }) {
+  const apiKey = requiredEnv("BREVO_API_KEY");
 
-  // Prevent infinite hanging.
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 20000
-});
+  const mailTo = requiredEnv("MAIL_TO");
+  const mailFrom = requiredEnv("MAIL_FROM");
+  const mailFromName = process.env.MAIL_FROM_NAME || "TechSolutions Web";
+
+  const subject = `Nueva consulta TechSolutions - ${servicio}`;
+
+  const payload = {
+    sender: {
+      name: mailFromName,
+      email: mailFrom
+    },
+    to: [
+      {
+        email: mailTo,
+        name: "TechSolutions"
+      }
+    ],
+    replyTo: {
+      email,
+      name: nombre
+    },
+    subject,
+    htmlContent: buildEmailHtml({ nombre, email, servicio, mensaje }),
+    textContent: buildEmailText({ nombre, email, servicio, mensaje })
+  };
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "api-key": apiKey,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message =
+      data?.message ||
+      data?.code ||
+      `Brevo API error: HTTP ${response.status}`;
+
+    const error = new Error(message);
+    error.status = response.status;
+    error.details = data;
+    throw error;
+  }
+
+  return data;
+}
 
 app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "TechSolutions backend",
-    message: "Backend running. Use /api/health, /api/debug-config, /api/test-smtp or /api/contact."
+    provider: "Brevo API",
+    message: "Backend running. Use /api/health, /api/debug-config, /api/test-brevo or /api/contact."
   });
 });
 
@@ -117,6 +167,7 @@ app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     service: "TechSolutions contact backend",
+    provider: "Brevo API",
     time: new Date().toISOString()
   });
 });
@@ -124,45 +175,45 @@ app.get("/api/health", (_req, res) => {
 app.get("/api/debug-config", (_req, res) => {
   res.json({
     ok: true,
-    port: PORT,
-    smtp: {
-      host: process.env.SMTP_HOST || null,
-      port: process.env.SMTP_PORT || null,
-      secure: process.env.SMTP_SECURE || null,
-      user: process.env.SMTP_USER || null,
-      pass_is_set: Boolean(process.env.SMTP_PASS),
-      pass_length: process.env.SMTP_PASS ? process.env.SMTP_PASS.length : 0,
-      mail_to: process.env.MAIL_TO || null,
-      mail_from: process.env.MAIL_FROM || null
-    },
+    provider: "Brevo API",
+    brevo_api_key_is_set: Boolean(process.env.BREVO_API_KEY),
+    brevo_api_key_prefix: process.env.BREVO_API_KEY
+      ? `${process.env.BREVO_API_KEY.slice(0, 8)}...`
+      : null,
+    mail_to: process.env.MAIL_TO || null,
+    mail_from: process.env.MAIL_FROM || null,
+    mail_from_name: process.env.MAIL_FROM_NAME || null,
     allowed_origins: allowedOrigins
   });
 });
 
-app.get("/api/test-smtp", async (_req, res) => {
+app.get("/api/test-brevo", async (_req, res) => {
   try {
-    await transporter.verify();
+    const result = await sendWithBrevo({
+      nombre: "Test TechSolutions",
+      email: process.env.MAIL_TO || "techsolution.cod@gmail.com",
+      servicio: "Prueba Brevo API",
+      mensaje: "Este es un correo de prueba enviado desde el backend de TechSolutions usando Brevo API."
+    });
 
     res.json({
       ok: true,
-      message: "SMTP connection verified successfully."
+      message: "Brevo test email sent successfully.",
+      result
     });
   } catch (error) {
-    console.error("SMTP verify error:", {
+    console.error("Brevo test error:", {
       message: error.message,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode
+      status: error.status,
+      details: error.details
     });
 
     res.status(500).json({
       ok: false,
-      message: "SMTP verification failed.",
+      message: "Brevo test failed.",
       error: error.message,
-      code: error.code || null,
-      command: error.command || null,
-      responseCode: error.responseCode || null
+      status: error.status || null,
+      details: error.details || null
     });
   }
 });
@@ -195,64 +246,35 @@ app.post("/api/contact", contactLimiter, async (req, res) => {
       });
     }
 
-    const toEmail = requiredEnv("MAIL_TO");
-    const fromEmail = process.env.MAIL_FROM || process.env.SMTP_USER;
-
-    const subject = `Nueva consulta TechSolutions - ${servicio}`;
-
-    const text = `
-Nueva consulta desde la web de TechSolutions
-
-Nombre: ${nombre}
-Email: ${email}
-Servicio: ${servicio}
-
-Mensaje:
-${mensaje}
-`;
-
-    const html = `
-      <div style="font-family: Arial, sans-serif; color:#111827; line-height:1.6;">
-        <h2 style="color:#0ea5e9;">Nueva consulta desde TechSolutions</h2>
-        <p><strong>Nombre:</strong> ${nombre}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Servicio:</strong> ${servicio}</p>
-        <p><strong>Mensaje:</strong></p>
-        <div style="white-space:pre-line; background:#f3f4f6; padding:14px; border-radius:10px;">${mensaje}</div>
-      </div>
-    `;
-
-    await transporter.sendMail({
-      from: `"TechSolutions Web" <${fromEmail}>`,
-      to: toEmail,
-      replyTo: email,
-      subject,
-      text,
-      html
+    const result = await sendWithBrevo({
+      nombre,
+      email,
+      servicio,
+      mensaje
     });
 
     return res.json({
       ok: true,
-      message: "Mensaje enviado correctamente."
+      message: "Mensaje enviado correctamente.",
+      result
     });
   } catch (error) {
     console.error("Contact error:", {
       message: error.message,
-      code: error.code,
-      command: error.command,
-      response: error.response,
-      responseCode: error.responseCode
+      status: error.status,
+      details: error.details
     });
 
     return res.status(500).json({
       ok: false,
       message: "No se pudo enviar el mensaje.",
       error: error.message,
-      code: error.code || null
+      status: error.status || null,
+      details: error.details || null
     });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`TechSolutions backend running on port ${PORT}`);
+  console.log(`TechSolutions backend running on port ${PORT} using Brevo API`);
 });
