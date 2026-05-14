@@ -1,7 +1,9 @@
+const header = document.getElementById("header");
+const navLinks = document.getElementById("navLinks");
+const menuToggle = document.getElementById("menuToggle");
+const themeToggle = document.getElementById("themeToggle");
+const langToggle = document.getElementById("langToggle");
 
-// =====================
-// Language / i18n
-// =====================
 const translations = {
   en: {
     "Tecnología • Innovación • Soluciones": "Technology • Innovation • Solutions",
@@ -86,6 +88,7 @@ const translations = {
     "Enviar mensaje": "Send message",
     "El mensaje se enviará directamente desde la página.": "The message will be sent directly from the website.",
     "Selecciona un servicio": "Select a service",
+    "Aplicación móvil": "Mobile application",
     "Página web": "Website",
     "Consultoría técnica": "Technical consulting",
     "© 2026 TechSolutions. Todos los derechos reservados.": "© 2026 TechSolutions. All rights reserved.",
@@ -96,107 +99,152 @@ const translations = {
     "Enviando...": "Sending...",
     "Enviando mensaje...": "Sending message...",
     "Mensaje enviado correctamente. Te responderemos pronto.": "Message sent successfully. We will reply soon.",
-    "No se pudo enviar el mensaje. Intenta por WhatsApp o escribe a techsolution.cod@gmail.com.": "The message could not be sent. Try WhatsApp or write to techsolution.cod@gmail.com.",
     "El servidor tardó demasiado en responder. Espera unos segundos y vuelve a intentar.": "The server took too long to respond. Wait a few seconds and try again."
   }
 };
 
-function getInitialLanguage() {
-  const saved = localStorage.getItem("techsolutions-language");
-  if (saved) return saved;
+let currentLanguage = localStorage.getItem("techsolutions-language") || getBrowserLanguage();
+let textNodesPrepared = false;
+
+function getBrowserLanguage() {
   const browserLang = (navigator.language || navigator.userLanguage || "es").toLowerCase();
   return browserLang.startsWith("en") ? "en" : "es";
 }
 
-let currentLanguage = getInitialLanguage();
+function prepareTextNodes() {
+  if (textNodesPrepared) return;
 
-function prepareTranslatableTextNodes() {
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const text = node.nodeValue.trim();
       if (!text) return NodeFilter.FILTER_REJECT;
+
       const parent = node.parentElement;
-      if (!parent || ["SCRIPT", "STYLE"].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
+      if (!parent) return NodeFilter.FILTER_REJECT;
+
+      if (["SCRIPT", "STYLE", "NOSCRIPT"].includes(parent.tagName)) {
+        return NodeFilter.FILTER_REJECT;
+      }
+
       return NodeFilter.FILTER_ACCEPT;
     }
   });
 
   while (walker.nextNode()) {
     const node = walker.currentNode;
-    if (!node.__originalText) node.__originalText = node.nodeValue;
+    node.__originalText = node.nodeValue;
   }
+
+  document.querySelectorAll("input[placeholder], textarea[placeholder]").forEach((element) => {
+    element.dataset.originalPlaceholder = element.getAttribute("placeholder") || "";
+  });
+
+  document.querySelectorAll("option").forEach((element) => {
+    element.dataset.originalText = element.textContent || "";
+  });
+
+  textNodesPrepared = true;
+}
+
+function translateTextNode(node, lang) {
+  const originalRaw = node.__originalText || node.nodeValue;
+  const original = originalRaw.trim();
+
+  if (!original) return;
+
+  const leading = originalRaw.match(/^\s*/)?.[0] || "";
+  const trailing = originalRaw.match(/\s*$/)?.[0] || "";
+  const translated = lang === "en" ? (translations.en[original] || original) : original;
+
+  node.nodeValue = leading + translated + trailing;
 }
 
 function translatePage(lang) {
+  prepareTextNodes();
+
   currentLanguage = lang;
-  document.documentElement.lang = lang;
   localStorage.setItem("techsolutions-language", lang);
+  document.documentElement.lang = lang;
 
-  const button = document.getElementById("langToggle");
-  if (button) button.textContent = lang === "en" ? "EN" : "ES";
-
-  document.querySelectorAll("input[placeholder], textarea[placeholder]").forEach((element) => {
-    if (!element.dataset.originalPlaceholder) {
-      element.dataset.originalPlaceholder = element.getAttribute("placeholder");
-    }
-    const original = element.dataset.originalPlaceholder;
-    element.setAttribute("placeholder", lang === "en" ? (translations.en[original] || original) : original);
-  });
+  if (langToggle) {
+    langToggle.textContent = lang === "en" ? "EN" : "ES";
+    langToggle.setAttribute("aria-label", lang === "en" ? "Switch language to Spanish" : "Cambiar idioma a inglés");
+  }
 
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       const text = node.nodeValue.trim();
       if (!text) return NodeFilter.FILTER_REJECT;
+
       const parent = node.parentElement;
-      if (!parent || ["SCRIPT", "STYLE"].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
+      if (!parent) return NodeFilter.FILTER_REJECT;
+
+      if (["SCRIPT", "STYLE", "NOSCRIPT"].includes(parent.tagName)) {
+        return NodeFilter.FILTER_REJECT;
+      }
+
       return NodeFilter.FILTER_ACCEPT;
     }
   });
 
   while (walker.nextNode()) {
-    const node = walker.currentNode;
-    const originalRaw = node.__originalText || node.nodeValue;
-    const original = originalRaw.trim();
-    const leading = originalRaw.match(/^\s*/)?.[0] || "";
-    const trailing = originalRaw.match(/\s*$/)?.[0] || "";
-    const translated = lang === "en" ? (translations.en[original] || original) : original;
-    node.nodeValue = leading + translated + trailing;
+    translateTextNode(walker.currentNode, lang);
   }
+
+  document.querySelectorAll("input[placeholder], textarea[placeholder]").forEach((element) => {
+    const original = element.dataset.originalPlaceholder || element.getAttribute("placeholder") || "";
+    element.setAttribute("placeholder", lang === "en" ? (translations.en[original] || original) : original);
+  });
+
+  document.querySelectorAll("option").forEach((element) => {
+    const original = element.dataset.originalText || element.textContent || "";
+    element.textContent = lang === "en" ? (translations.en[original] || original) : original;
+  });
+}
+
+function t(spanishText) {
+  return currentLanguage === "en" ? (translations.en[spanishText] || spanishText) : spanishText;
 }
 
 function toggleLanguage() {
   translatePage(currentLanguage === "en" ? "es" : "en");
 }
 
-
-const header = document.getElementById("header");
-const navLinks = document.getElementById("navLinks");
-const menuToggle = document.getElementById("menuToggle");
-const themeToggle = document.getElementById("themeToggle");
-
+// Theme
 function setTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   localStorage.setItem("techsolutions-theme", theme);
-  themeToggle.textContent = theme === "dark" ? "☾" : "☀";
+
+  if (themeToggle) {
+    themeToggle.textContent = theme === "dark" ? "☾" : "☀";
+  }
 }
 
 setTheme(localStorage.getItem("techsolutions-theme") || "dark");
 
-themeToggle.addEventListener("click", () => {
-  const current = document.documentElement.getAttribute("data-theme");
-  setTheme(current === "dark" ? "light" : "dark");
-});
+if (themeToggle) {
+  themeToggle.addEventListener("click", () => {
+    const current = document.documentElement.getAttribute("data-theme");
+    setTheme(current === "dark" ? "light" : "dark");
+  });
+}
 
-menuToggle.addEventListener("click", () => {
-  navLinks.classList.toggle("open");
-});
+if (langToggle) {
+  langToggle.addEventListener("click", toggleLanguage);
+}
+
+if (menuToggle && navLinks) {
+  menuToggle.addEventListener("click", () => {
+    navLinks.classList.toggle("open");
+  });
+}
 
 document.querySelectorAll(".nav-links a").forEach(link => {
-  link.addEventListener("click", () => navLinks.classList.remove("open"));
+  link.addEventListener("click", () => navLinks?.classList.remove("open"));
 });
 
 window.addEventListener("scroll", () => {
-  header.classList.toggle("scrolled", window.scrollY > 40);
+  header?.classList.toggle("scrolled", window.scrollY > 40);
 
   const sections = document.querySelectorAll("main section[id]");
   const scrollY = window.scrollY + 140;
@@ -216,6 +264,7 @@ window.addEventListener("scroll", () => {
   });
 }, { passive: true });
 
+// Reveal animation
 const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) entry.target.classList.add("visible");
@@ -226,11 +275,13 @@ document.querySelectorAll(".reveal").forEach(el => revealObserver.observe(el));
 
 // Digital rain background
 const canvas = document.getElementById("matrix");
-const ctx = canvas.getContext("2d");
+const ctx = canvas?.getContext("2d");
 let columns = [];
 const chars = "01TS{}[]<>/\\|+=TECHSOLUTIONS";
 
 function resizeCanvas() {
+  if (!canvas || !ctx) return;
+
   const dpr = window.devicePixelRatio || 1;
   canvas.width = window.innerWidth * dpr;
   canvas.height = window.innerHeight * dpr;
@@ -244,6 +295,8 @@ function resizeCanvas() {
 }
 
 function drawMatrix() {
+  if (!canvas || !ctx) return;
+
   ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
   ctx.font = "14px JetBrains Mono";
   ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#38bdf8";
@@ -265,79 +318,91 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 drawMatrix();
 
-// Contact form using your own Render backend.
-// IMPORTANT:
-// In index.html replace:
-// https://TU-BACKEND-DE-RENDER.onrender.com
-// with your real Render URL.
+// Contact form using Render backend
 const contactForm = document.getElementById("contactForm");
 const formStatus = document.getElementById("formStatus");
 
 const API_BASE_URL = window.TECHSOLUTIONS_API_URL || "https://techsolution-website.onrender.com";
 
-contactForm.addEventListener("submit", async function(e) {
-  e.preventDefault();
-  e.stopPropagation();
+if (contactForm) {
+  contactForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    e.stopPropagation();
 
-  const submitButton = contactForm.querySelector('button[type="submit"]');
-  const originalText = submitButton.textContent;
+    const submitButton = contactForm.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
 
-  formStatus.textContent = "";
-  formStatus.className = "form-status";
+    formStatus.textContent = "";
+    formStatus.className = "form-status";
 
-  if (!contactForm.checkValidity()) {
-    formStatus.textContent = "Completa todos los campos requeridos antes de enviar.";
-    formStatus.classList.add("error");
-    return false;
-  }
-
-  submitButton.disabled = true;
-  submitButton.textContent = "Enviando...";
-  formStatus.textContent = "Enviando mensaje...";
-
-  const payload = {
-    nombre: document.getElementById("nombre").value.trim(),
-    email: document.getElementById("email").value.trim(),
-    servicio: document.getElementById("servicio").value.trim(),
-    mensaje: document.getElementById("mensaje").value.trim()
-  };
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/contact`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || !result.ok) {
-      throw new Error(result.message || "Error al enviar el mensaje.");
+    if (!contactForm.checkValidity()) {
+      formStatus.textContent = t("Completa todos los campos requeridos antes de enviar.");
+      formStatus.classList.add("error");
+      return false;
     }
 
-    formStatus.textContent = "Mensaje enviado correctamente. Te responderemos pronto.";
-    formStatus.classList.add("success");
-    contactForm.reset();
-  } catch (error) {
-    console.error("Backend contact error:", error);
-    formStatus.textContent = "No se pudo enviar el mensaje. Intenta por WhatsApp o escribe a techsolution.cod@gmail.com.";
-    formStatus.classList.add("error");
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = originalText;
-  }
+    submitButton.disabled = true;
+    submitButton.textContent = t("Enviando...");
+    formStatus.textContent = t("Enviando mensaje...");
 
-  return false;
-});
+    const payload = {
+      nombre: document.getElementById("nombre").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      servicio: document.getElementById("servicio").value.trim(),
+      mensaje: document.getElementById("mensaje").value.trim()
+    };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
 
-document.addEventListener("DOMContentLoaded", () => {
-  prepareTranslatableTextNodes();
-  translatePage(currentLanguage);
+      clearTimeout(timeoutId);
 
-  const langToggle = document.getElementById("langToggle");
-  if (langToggle) langToggle.addEventListener("click", toggleLanguage);
-});
+      let result = {};
+      try {
+        result = await response.json();
+      } catch (_) {
+        result = {};
+      }
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || result.message || "Error al enviar el mensaje.");
+      }
+
+      formStatus.textContent = t("Mensaje enviado correctamente. Te responderemos pronto.");
+      formStatus.classList.add("success");
+      contactForm.reset();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.error("Backend contact error:", error);
+
+      if (error.name === "AbortError") {
+        formStatus.textContent = t("El servidor tardó demasiado en responder. Espera unos segundos y vuelve a intentar.");
+      } else {
+        formStatus.textContent = currentLanguage === "en"
+          ? `The message could not be sent: ${error.message}`
+          : `No se pudo enviar el mensaje: ${error.message}`;
+      }
+
+      formStatus.classList.add("error");
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = originalText;
+    }
+
+    return false;
+  });
+}
+
+// Force initial translation after all nodes exist.
+prepareTextNodes();
+translatePage(currentLanguage);
