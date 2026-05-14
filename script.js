@@ -94,10 +94,15 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 drawMatrix();
 
-// Contact form without EmailJS and without redirects.
-// It sends from the same page using fetch() and shows the result inline.
+// Contact form using your own Render backend.
+// IMPORTANT:
+// In index.html replace:
+// https://TU-BACKEND-DE-RENDER.onrender.com
+// with your real Render URL.
 const contactForm = document.getElementById("contactForm");
 const formStatus = document.getElementById("formStatus");
+
+const API_BASE_URL = window.TECHSOLUTIONS_API_URL || "https://TU-BACKEND-DE-RENDER.onrender.com";
 
 contactForm.addEventListener("submit", async function(e) {
   e.preventDefault();
@@ -119,29 +124,25 @@ contactForm.addEventListener("submit", async function(e) {
   submitButton.textContent = "Enviando...";
   formStatus.textContent = "Enviando mensaje...";
 
-  const formData = new FormData(contactForm);
-  formData.append("_subject", "Nueva consulta desde TechSolutions");
-  formData.append("_template", "table");
-  formData.append("_captcha", "false");
+  const payload = {
+    nombre: document.getElementById("nombre").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    servicio: document.getElementById("servicio").value.trim(),
+    mensaje: document.getElementById("mensaje").value.trim()
+  };
 
   try {
-    const response = await fetch("https://formsubmit.co/ajax/techsolution.cod@gmail.com", {
+    const response = await fetch(`${API_BASE_URL}/api/contact`, {
       method: "POST",
       headers: {
-        "Accept": "application/json"
+        "Content-Type": "application/json"
       },
-      body: formData,
-      redirect: "follow"
+      body: JSON.stringify(payload)
     });
 
-    let result = {};
-    try {
-      result = await response.json();
-    } catch (_) {
-      result = {};
-    }
+    const result = await response.json();
 
-    if (!response.ok) {
+    if (!response.ok || !result.ok) {
       throw new Error(result.message || "Error al enviar el mensaje.");
     }
 
@@ -149,8 +150,8 @@ contactForm.addEventListener("submit", async function(e) {
     formStatus.classList.add("success");
     contactForm.reset();
   } catch (error) {
-    console.error("FormSubmit error:", error);
-    formStatus.textContent = "No se pudo enviar desde la página. Usa WhatsApp o escribe a techsolution.cod@gmail.com.";
+    console.error("Backend contact error:", error);
+    formStatus.textContent = "No se pudo enviar el mensaje. Intenta por WhatsApp o escribe a techsolution.cod@gmail.com.";
     formStatus.classList.add("error");
   } finally {
     submitButton.disabled = false;

@@ -1,0 +1,47 @@
+# Archivos para reemplazar en la raíz del repo
+
+Copia estos archivos en la raíz de tu repo `techsolution-website`, reemplazando los existentes:
+
+- index.html
+- styles.css
+- script.js
+- assets/techsolutions-logo.png
+
+## Paso importante
+
+Abre `index.html` y busca:
+
+```js
+window.TECHSOLUTIONS_API_URL = "https://TU-BACKEND-DE-RENDER.onrender.com";
+```
+
+Reemplázalo por tu URL real de Render, por ejemplo:
+
+```js
+window.TECHSOLUTIONS_API_URL = "https://techsolutions-backend.onrender.com";
+```
+
+## Luego sube los cambios
+
+```bash
+git add index.html styles.css script.js assets/techsolutions-logo.png
+git commit -m "Connect root website to Render backend"
+git push
+```
+
+## Verificación
+
+Antes de probar el formulario, abre:
+
+```text
+https://TU-BACKEND-DE-RENDER.onrender.com/api/health
+```
+
+Debe responder:
+
+```json
+{
+  "ok": true,
+  "service": "TechSolutions contact backend"
+}
+```

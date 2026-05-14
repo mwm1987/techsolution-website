@@ -994,3 +994,25 @@ img {
     justify-content: center;
   }
 }
+
+
+.form-status {
+  min-height: 1.4rem;
+  color: var(--muted);
+  font-weight: 750;
+  font-size: 0.92rem;
+}
+
+.form-status.success {
+  color: var(--success);
+}
+
+.form-status.error {
+  color: #f87171;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
