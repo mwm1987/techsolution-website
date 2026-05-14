@@ -94,29 +94,47 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 drawMatrix();
 
-// Contact form without EmailJS.
-// Opens the visitor email client with all data prepared.
-document.getElementById("contactForm").addEventListener("submit", function(e) {
+// Contact form without EmailJS and without opening the visitor email app.
+// Uses FormSubmit AJAX endpoint. On first use, FormSubmit may ask you to confirm your email.
+const contactForm = document.getElementById("contactForm");
+
+contactForm.addEventListener("submit", async function(e) {
   e.preventDefault();
 
-  const nombre = document.getElementById("nombre").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const servicio = document.getElementById("servicio").value.trim();
-  const mensaje = document.getElementById("mensaje").value.trim();
+  const submitButton = contactForm.querySelector('button[type="submit"]');
+  const originalText = submitButton.textContent;
+  submitButton.disabled = true;
+  submitButton.textContent = "Enviando...";
 
-  const subject = encodeURIComponent(`Consulta desde la web - ${servicio || "TechSolutions"}`);
-  const body = encodeURIComponent(
-`Hola TechSolutions,
+  const formData = new FormData(contactForm);
 
-Mi nombre es: ${nombre}
-Mi email es: ${email}
-Servicio de interés: ${servicio}
+  // Extra FormSubmit options
+  formData.append("_subject", "Nueva consulta desde TechSolutions");
+  formData.append("_template", "table");
+  formData.append("_captcha", "false");
 
-Mensaje:
-${mensaje}
+  try {
+    const response = await fetch("https://formsubmit.co/ajax/Technews1987@gmail.com", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json"
+      },
+      body: formData
+    });
 
-Enviado desde el formulario web de TechSolutions.`
-  );
+    const result = await response.json();
 
-  window.location.href = `mailto:Technews1987@gmail.com?subject=${subject}&body=${body}`;
+    if (response.ok) {
+      alert("¡Mensaje enviado correctamente! Te responderemos pronto.");
+      contactForm.reset();
+    } else {
+      throw new Error(result.message || "No se pudo enviar el mensaje.");
+    }
+  } catch (error) {
+    alert("No se pudo enviar el mensaje desde la página. Puedes escribir directamente a Technews1987@gmail.com o por WhatsApp.");
+    console.error("FormSubmit error:", error);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = originalText;
+  }
 });
