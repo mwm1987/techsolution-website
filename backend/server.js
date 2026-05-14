@@ -4,8 +4,6 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 
 dotenv.config();
 
@@ -17,28 +15,34 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-app.use(helmet({
-  contentSecurityPolicy: false
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false
+  })
+);
 
 app.use(express.json({ limit: "20kb" }));
 
-app.use(cors({
-  origin(origin, callback) {
-    // Allow curl/Postman/no origin in development
-    if (!origin) return callback(null, true);
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Permite requests sin origin, por ejemplo Postman/curl o health checks.
+      if (!origin) return callback(null, true);
 
-    if (allowedOrigins.length === 0) {
-      return callback(null, true);
+      // Si no configuras ALLOWED_ORIGINS, permite todo.
+      // Para producción, conviene configurar ALLOWED_ORIGINS en Render.
+      if (allowedOrigins.length === 0) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS: Origin not allowed"));
     }
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error("CORS: Origin not allowed"));
-  }
-}));
+  })
+);
 
 const contactLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -63,9 +67,11 @@ function isValidEmail(email) {
 
 function requiredEnv(name) {
   const value = process.env[name];
+
   if (!value) {
     throw new Error(`Missing environment variable: ${name}`);
   }
+
   return value;
 }
 
@@ -77,6 +83,14 @@ const transporter = nodemailer.createTransport({
     user: requiredEnv("SMTP_USER"),
     pass: requiredEnv("SMTP_PASS")
   }
+});
+
+app.get("/", (_req, res) => {
+  res.json({
+    ok: true,
+    service: "TechSolutions backend",
+    message: "Backend running. Use /api/health or /api/contact."
+  });
 });
 
 app.get("/api/health", (_req, res) => {
@@ -157,22 +171,12 @@ ${mensaje}
     });
   } catch (error) {
     console.error("Contact error:", error);
+
     return res.status(500).json({
       ok: false,
       message: "No se pudo enviar el mensaje."
     });
   }
-});
-
-// Optional: serve frontend from backend too
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const frontendPath = path.join(__dirname, "..", "frontend");
-
-app.use(express.static(frontendPath));
-
-app.get("*", (_req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 app.listen(PORT, () => {
