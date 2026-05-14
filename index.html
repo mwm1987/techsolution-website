@@ -1326,6 +1326,7 @@
             </div>
 
             <button class="btn" type="submit">Enviar mensaje</button>
+            <p style="color: var(--muted); font-size: .86rem; margin-top: .55rem;">Al enviar se abrirá tu aplicación de correo con el mensaje listo para mandar.</p>
           </form>
         </article>
       </div>
@@ -1338,9 +1339,7 @@
       <p>Tecnología • Innovación • Soluciones</p>
     </div>
   </footer>
-
-  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
-  <script>
+<script>
     const header = document.getElementById("header");
     const navLinks = document.getElementById("navLinks");
     const menuToggle = document.getElementById("menuToggle");
@@ -1438,30 +1437,35 @@
     resizeCanvas();
     drawMatrix();
 
-    // Existing EmailJS configuration from current page
-    (function() {
-      if (window.emailjs) {
-        emailjs.init("Ss3A0SvMNWyEokRz0");
-      }
-    })();
-
+    // Formulario sin EmailJS.
+    // Al enviar, abre la app de correo del visitante con el mensaje listo.
     document.getElementById("contactForm").addEventListener("submit", function(e) {
       e.preventDefault();
 
-      if (!window.emailjs) {
-        alert("No se pudo cargar el servicio de email. Escríbeme directamente a Technews1987@gmail.com.");
-        return;
-      }
+      const nombre = document.getElementById("nombre").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const servicio = document.getElementById("servicio").value.trim();
+      const mensaje = document.getElementById("mensaje").value.trim();
 
-      emailjs.sendForm("service_1xrovyc", "template_efr7iu7", this)
-        .then(() => {
-          alert("¡Gracias por tu mensaje! Te responderemos pronto.");
-          this.reset();
-        }, (error) => {
-          alert("Ocurrió un error al enviar el mensaje: " + (error.text || "intenta por email directo."));
-        });
+      const subject = encodeURIComponent(`Consulta desde la web - ${servicio || "TechSolutions"}`);
+      const body = encodeURIComponent(
+`Hola TechSolutions,
+
+Mi nombre es: ${nombre}
+Mi email es: ${email}
+Servicio de interés: ${servicio}
+
+Mensaje:
+${mensaje}
+
+Enviado desde el formulario web de TechSolutions.`
+      );
+
+      window.location.href = `mailto:Technews1987@gmail.com?subject=${subject}&body=${body}`;
+    });
     });
   </script>
 </body>
 </html>
+
 
