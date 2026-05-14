@@ -26,11 +26,8 @@ app.use(express.json({ limit: "20kb" }));
 app.use(
   cors({
     origin(origin, callback) {
-      // Permite requests sin origin, por ejemplo Postman/curl o health checks.
       if (!origin) return callback(null, true);
 
-      // Si no configuras ALLOWED_ORIGINS, permite todo.
-      // Para producción, conviene configurar ALLOWED_ORIGINS en Render.
       if (allowedOrigins.length === 0) {
         return callback(null, true);
       }
@@ -39,7 +36,8 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(new Error("CORS: Origin not allowed"));
+      console.error("CORS blocked origin:", origin);
+      return callback(new Error(`CORS: Origin not allowed: ${origin}`));
     }
   })
 );
@@ -82,14 +80,19 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: requiredEnv("SMTP_USER"),
     pass: requiredEnv("SMTP_PASS")
-  }
+  },
+
+  // These prevent the request from hanging forever.
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000
 });
 
 app.get("/", (_req, res) => {
   res.json({
     ok: true,
     service: "TechSolutions backend",
-    message: "Backend running. Use /api/health or /api/contact."
+    message: "Backend running. Use /api/health, /api/test-smtp or /api/contact."
   });
 });
 
@@ -99,6 +102,25 @@ app.get("/api/health", (_req, res) => {
     service: "TechSolutions contact backend",
     time: new Date().toISOString()
   });
+});
+
+app.get("/api/test-smtp", async (_req, res) => {
+  try {
+    await transporter.verify();
+
+    res.json({
+      ok: true,
+      message: "SMTP connection verified successfully."
+    });
+  } catch (error) {
+    console.error("SMTP verify error:", error);
+
+    res.status(500).json({
+      ok: false,
+      message: "SMTP verification failed.",
+      error: error.message
+    });
+  }
 });
 
 app.post("/api/contact", contactLimiter, async (req, res) => {
@@ -174,7 +196,8 @@ ${mensaje}
 
     return res.status(500).json({
       ok: false,
-      message: "No se pudo enviar el mensaje."
+      message: "No se pudo enviar el mensaje.",
+      error: error.message
     });
   }
 });

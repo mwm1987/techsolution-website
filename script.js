@@ -94,15 +94,11 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 drawMatrix();
 
-// Contact form using your own Render backend.
-// IMPORTANT:
-// In index.html replace:
-// https://TU-BACKEND-DE-RENDER.onrender.com
-// with your real Render URL.
+// Contact form using Render backend
 const contactForm = document.getElementById("contactForm");
 const formStatus = document.getElementById("formStatus");
 
-const API_BASE_URL = window.TECHSOLUTIONS_API_URL || "https://TU-BACKEND-DE-RENDER.onrender.com";
+const API_BASE_URL = window.TECHSOLUTIONS_API_URL || "https://techsolution-website.onrender.com";
 
 contactForm.addEventListener("submit", async function(e) {
   e.preventDefault();
@@ -131,27 +127,45 @@ contactForm.addEventListener("submit", async function(e) {
     mensaje: document.getElementById("mensaje").value.trim()
   };
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+
   try {
     const response = await fetch(`${API_BASE_URL}/api/contact`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      signal: controller.signal
     });
 
-    const result = await response.json();
+    clearTimeout(timeoutId);
+
+    let result = {};
+    try {
+      result = await response.json();
+    } catch (_) {
+      result = {};
+    }
 
     if (!response.ok || !result.ok) {
-      throw new Error(result.message || "Error al enviar el mensaje.");
+      throw new Error(result.error || result.message || "Error al enviar el mensaje.");
     }
 
     formStatus.textContent = "Mensaje enviado correctamente. Te responderemos pronto.";
     formStatus.classList.add("success");
     contactForm.reset();
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error("Backend contact error:", error);
-    formStatus.textContent = "No se pudo enviar el mensaje. Intenta por WhatsApp o escribe a techsolution.cod@gmail.com.";
+
+    if (error.name === "AbortError") {
+      formStatus.textContent = "El servidor tardó demasiado en responder. Espera unos segundos y vuelve a intentar.";
+    } else {
+      formStatus.textContent = `No se pudo enviar el mensaje: ${error.message}`;
+    }
+
     formStatus.classList.add("error");
   } finally {
     submitButton.disabled = false;
