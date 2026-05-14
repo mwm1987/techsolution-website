@@ -1,23 +1,44 @@
-# TechSolutions Website - Formulario sin abrir ventanas
+# TechSolutions Fullstack Website
 
-Esta versión fuerza el envío del formulario desde la misma página usando JavaScript `fetch()`.
+Este paquete incluye:
 
-No usa EmailJS.
-No usa `mailto:` para el formulario.
-No abre Gmail, Outlook ni otra ventana del navegador para enviar.
+```text
+frontend/
+  index.html
+  styles.css
+  script.js
+  assets/techsolutions-logo.png
 
-Destino:
-techsolution.cod@gmail.com
+backend/
+  server.js
+  package.json
+  .env.example
+  README.md
+```
 
-## Importante
-
-FormSubmit puede pedir una confirmación inicial al correo techsolution.cod@gmail.com.
-Después de confirmar, el formulario queda activo.
-
-## Subir a GitHub
+## Uso local rápido
 
 ```bash
-git add index.html styles.css script.js assets/techsolutions-logo.png
-git commit -m "Fix contact form without redirects"
-git push
+cd backend
+npm install
+copy .env.example .env
+npm run dev
+```
+
+Luego abre:
+
+```text
+http://localhost:3000
+```
+
+El backend sirve también el frontend.
+
+## Producción
+
+- El frontend puede seguir en GitHub Pages.
+- El backend debe subirse a Render/Railway/Fly.io/VPS.
+- Cuando tengas la URL del backend, edita `frontend/index.html`:
+
+```js
+window.TECHSOLUTIONS_API_URL = "https://tu-backend-url.com";
 ```
