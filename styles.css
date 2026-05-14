@@ -1016,3 +1016,11 @@ img {
   cursor: not-allowed;
   transform: none;
 }
+
+
+.lang-toggle {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
