@@ -125,7 +125,7 @@ contactForm.addEventListener("submit", async function(e) {
   formData.append("_captcha", "false");
 
   try {
-    const response = await fetch("https://formsubmit.co/ajax/Technews1987@gmail.com", {
+    const response = await fetch("https://formsubmit.co/ajax/techsolution.cod@gmail.com", {
       method: "POST",
       headers: {
         "Accept": "application/json"
@@ -150,7 +150,7 @@ contactForm.addEventListener("submit", async function(e) {
     contactForm.reset();
   } catch (error) {
     console.error("FormSubmit error:", error);
-    formStatus.textContent = "No se pudo enviar desde la página. Usa WhatsApp o escribe a Technews1987@gmail.com.";
+    formStatus.textContent = "No se pudo enviar desde la página. Usa WhatsApp o escribe a techsolution.cod@gmail.com.";
     formStatus.classList.add("error");
   } finally {
     submitButton.disabled = false;
