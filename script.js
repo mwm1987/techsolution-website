@@ -94,21 +94,32 @@ window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 drawMatrix();
 
-// Contact form without EmailJS and without opening the visitor email app.
-// Uses FormSubmit AJAX endpoint. On first use, FormSubmit may ask you to confirm your email.
+// Contact form without EmailJS and without redirects.
+// It sends from the same page using fetch() and shows the result inline.
 const contactForm = document.getElementById("contactForm");
+const formStatus = document.getElementById("formStatus");
 
 contactForm.addEventListener("submit", async function(e) {
   e.preventDefault();
+  e.stopPropagation();
 
   const submitButton = contactForm.querySelector('button[type="submit"]');
   const originalText = submitButton.textContent;
+
+  formStatus.textContent = "";
+  formStatus.className = "form-status";
+
+  if (!contactForm.checkValidity()) {
+    formStatus.textContent = "Completa todos los campos requeridos antes de enviar.";
+    formStatus.classList.add("error");
+    return false;
+  }
+
   submitButton.disabled = true;
   submitButton.textContent = "Enviando...";
+  formStatus.textContent = "Enviando mensaje...";
 
   const formData = new FormData(contactForm);
-
-  // Extra FormSubmit options
   formData.append("_subject", "Nueva consulta desde TechSolutions");
   formData.append("_template", "table");
   formData.append("_captcha", "false");
@@ -119,22 +130,32 @@ contactForm.addEventListener("submit", async function(e) {
       headers: {
         "Accept": "application/json"
       },
-      body: formData
+      body: formData,
+      redirect: "follow"
     });
 
-    const result = await response.json();
-
-    if (response.ok) {
-      alert("¡Mensaje enviado correctamente! Te responderemos pronto.");
-      contactForm.reset();
-    } else {
-      throw new Error(result.message || "No se pudo enviar el mensaje.");
+    let result = {};
+    try {
+      result = await response.json();
+    } catch (_) {
+      result = {};
     }
+
+    if (!response.ok) {
+      throw new Error(result.message || "Error al enviar el mensaje.");
+    }
+
+    formStatus.textContent = "Mensaje enviado correctamente. Te responderemos pronto.";
+    formStatus.classList.add("success");
+    contactForm.reset();
   } catch (error) {
-    alert("No se pudo enviar el mensaje desde la página. Puedes escribir directamente a Technews1987@gmail.com o por WhatsApp.");
     console.error("FormSubmit error:", error);
+    formStatus.textContent = "No se pudo enviar desde la página. Usa WhatsApp o escribe a Technews1987@gmail.com.";
+    formStatus.classList.add("error");
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = originalText;
   }
+
+  return false;
 });
