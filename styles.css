@@ -1024,3 +1024,274 @@ img {
   font-weight: 950;
   letter-spacing: 0.04em;
 }
+
+/* Language Selector */
+.lang-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-solid) 74%, transparent);
+  padding: 0 0.6rem;
+  height: 44px;
+}
+
+.lang-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.76rem;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  outline: none;
+}
+
+.lang-btn.active {
+  color: var(--text);
+  background: var(--surface-soft);
+  font-weight: 950;
+}
+
+.lang-btn:hover:not(.active) {
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+.lang-separator {
+  color: var(--line);
+  font-size: 0.8rem;
+  user-select: none;
+}
+
+/* Capabilities Section */
+.capabilities-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+.capability-card {
+  position: relative;
+  border-radius: 20px;
+  padding: 1.5rem;
+  overflow: hidden;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.capability-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(56, 189, 248, 0.42);
+  box-shadow: var(--shadow-soft);
+}
+
+.capability-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(56, 189, 248, 0.14));
+  color: var(--brand);
+  font-size: 1.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.capability-card h3 {
+  font-size: 1.08rem;
+  margin-bottom: 0.45rem;
+  letter-spacing: -0.02em;
+}
+
+.capability-card p {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* LATAM Representation / Partnership Section */
+.representation-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: 3.5rem;
+  align-items: center;
+}
+
+.representation-text {
+  font-size: 1.1rem;
+  color: var(--muted);
+  margin-bottom: 1.8rem;
+}
+
+.partnership-badge {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border-radius: 20px;
+  padding: 1rem 1.2rem;
+  margin-top: 1rem;
+}
+
+.badge-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(56, 189, 248, 0.18));
+  display: grid;
+  place-items: center;
+  font-size: 1.85rem;
+  color: var(--brand);
+}
+
+.badge-text strong {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.badge-text span {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+/* Globe Visual */
+.representation-visual {
+  position: relative;
+  height: 320px;
+  display: grid;
+  place-items: center;
+}
+
+.visual-globe {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(56, 189, 248, 0.26), transparent 70%),
+              rgba(14, 165, 233, 0.04);
+  border: 1px solid var(--line);
+  box-shadow: 0 0 50px rgba(56, 189, 248, 0.08);
+  animation: pulseOrb 6s ease-in-out infinite;
+}
+
+.node {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface-solid);
+  border: 2px solid var(--brand);
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  box-shadow: var(--shadow-soft);
+  z-index: 2;
+}
+
+.node::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  font-size: 0.68rem;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 800;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.node-ar {
+  bottom: 15%;
+  left: 20%;
+}
+
+.node-latam {
+  top: 15%;
+  right: 20%;
+  border-color: var(--success);
+}
+
+.connection-line {
+  position: absolute;
+  top: 40%;
+  left: 45%;
+  width: 80px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--brand), var(--success));
+  transform: rotate(-30deg);
+  transform-origin: 0 0;
+  z-index: 1;
+}
+
+.connection-line::before {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--success);
+  border-radius: 50%;
+  right: 0;
+  top: -2px;
+}
+
+/* Contact Notice */
+.contact-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border-radius: 18px;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--line);
+  background: rgba(14, 165, 233, 0.03);
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.contact-notice .notice-icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--brand);
+}
+
+.contact-notice p {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1050px) {
+  .capabilities-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  
+  .representation-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  
+  .representation-visual {
+    height: 260px;
+  }
+}
+
+@media (max-width: 660px) {
+  .capabilities-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .lang-selector {
+    height: 38px;
+  }
+}
+

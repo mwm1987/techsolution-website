@@ -2,7 +2,7 @@ const header = document.getElementById("header");
 const navLinks = document.getElementById("navLinks");
 const menuToggle = document.getElementById("menuToggle");
 const themeToggle = document.getElementById("themeToggle");
-const langToggle = document.getElementById("langToggle");
+const langButtons = document.querySelectorAll(".lang-btn");
 
 const translations = {
   en: {
@@ -99,7 +99,43 @@ const translations = {
     "Enviando...": "Sending...",
     "Enviando mensaje...": "Sending message...",
     "Mensaje enviado correctamente. Te responderemos pronto.": "Message sent successfully. We will reply soon.",
-    "El servidor tardó demasiado en responder. Espera unos segundos y vuelve a intentar.": "The server took too long to respond. Wait a few seconds and try again."
+    "El servidor tardó demasiado en responder. Espera unos segundos y vuelve a intentar.": "The server took too long to respond. Wait a few seconds and try again.",
+    
+    // New Translations
+    "Representación": "Partnership",
+    "Automatización industrial, ingeniería de control y": "Industrial Automation, Control Engineering &",
+    "soluciones de software desde Argentina.": "Software Solutions from Argentina.",
+    "Capacidades": "Capabilities",
+    "Especialización técnica en ingeniería de control y automatización.": "Technical Specialization in Control Engineering & Automation.",
+    "Ofrecemos soporte e integración técnica avanzada para sistemas industriales, asegurando robustez y continuidad operativa.": "We offer advanced technical support and integration for industrial systems, ensuring robustness and operational continuity.",
+    "Resolución de fallas de PLC": "PLC troubleshooting",
+    "Diagnóstico y resolución rápida de fallas en controladores lógicos programables.": "Rapid diagnosis and troubleshooting of PLC systems.",
+    "Soporte HMI/SCADA": "HMI/SCADA support",
+    "Mantenimiento, desarrollo y optimización de interfaces de operación y sistemas SCADA.": "Development, maintenance, and optimization of operator interfaces and SCADA systems.",
+    "Integración de sistemas de control": "Control systems integration",
+    "Conexión e integración de plataformas de hardware y software industrial.": "Seamless integration of industrial hardware and software platforms.",
+    "Redes industriales": "Industrial networking",
+    "Configuración y diagnóstico de redes industriales y protocolos de comunicación.": "Configuration and diagnostics of industrial networks and communication protocols.",
+    "Soporte en puesta en marcha": "Commissioning support",
+    "Acompañamiento en sitio y validación de sistemas de automatización durante el arranque.": "On-site assistance and verification of automation systems during start-up.",
+    "Soporte técnico remoto": "Remote technical support",
+    "Asistencia remota eficiente para resolver incidencias de automatización de manera ágil.": "Efficient remote troubleshooting and assistance for automation systems.",
+    "Relevamientos de sitio": "Site surveys",
+    "Inspecciones técnicas de campo para documentar el estado actual de sistemas de control.": "On-site technical surveys to assess and document existing control systems.",
+    "Informes técnicos": "Technical reports",
+    "Elaboración de reportes de diagnóstico, propuestas de mejora y especificaciones.": "Preparation of detailed diagnostic reports, upgrade paths, and specifications.",
+    "Coordinación de clientes": "Client coordination in Spanish",
+    "Enlace y gestión de proyectos con clientes de habla hispana en Latinoamérica.": "Project coordination and communication with Spanish-speaking clients.",
+    "Soporte para propuestas": "Proposal support",
+    "Asistencia en la cotización y definición técnica de alcances para proyectos.": "Technical scoping and estimation support for engineering bids.",
+    "Representación LATAM": "International Partnership",
+    "Representación técnica-comercial para Latinoamérica": "Local Technical Partner in Argentina for Spanish-speaking Latin American projects.",
+    "TechSolutions puede actuar como estructura local en Argentina para apoyar proyectos de automatización, ingeniería de control y soporte técnico-comercial para clientes de habla hispana en Latinoamérica.": "TechSolutions is prepared to operate as a local technical-commercial structure in Argentina, supporting international engineering companies that need Spanish-speaking representation for Latin American industrial projects.",
+    "Socio Técnico Local": "Local Technical Partner",
+    "Estructura flexible y soporte comercial para clientes regionales.": "Flexible structure and direct support for regional clients.",
+    "Argentina": "Argentina",
+    "LATAM": "LATAM",
+    "Contacto corporativo disponible para consultas sobre alianzas internacionales.": "Corporate contact available for international partnership inquiries."
   }
 };
 
@@ -166,10 +202,13 @@ function translatePage(lang) {
   localStorage.setItem("techsolutions-language", lang);
   document.documentElement.lang = lang;
 
-  if (langToggle) {
-    langToggle.textContent = lang === "en" ? "EN" : "ES";
-    langToggle.setAttribute("aria-label", lang === "en" ? "Switch language to Spanish" : "Cambiar idioma a inglés");
-  }
+  langButtons.forEach(btn => {
+    if (btn.dataset.lang === lang) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
 
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
@@ -229,8 +268,12 @@ if (themeToggle) {
   });
 }
 
-if (langToggle) {
-  langToggle.addEventListener("click", toggleLanguage);
+if (langButtons.length > 0) {
+  langButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      translatePage(btn.dataset.lang);
+    });
+  });
 }
 
 if (menuToggle && navLinks) {
