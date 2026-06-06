@@ -105,6 +105,7 @@ const translations = {
     "Representación": "Partnership",
     "Automatización industrial, ingeniería de control y": "Industrial Automation, Control Engineering &",
     "soluciones de software desde Argentina.": "Software Solutions from Argentina.",
+    "Compatibilidad y experiencia multimarcas de PLC": "Multi-brand PLC compatibility and experience",
     "Capacidades": "Capabilities",
     "Especialización técnica en ingeniería de control y automatización.": "Technical Specialization in Control Engineering & Automation.",
     "Ofrecemos soporte e integración técnica avanzada para sistemas industriales, asegurando robustez y continuidad operativa.": "We offer advanced technical support and integration for industrial systems, ensuring robustness and operational continuity.",

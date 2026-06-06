@@ -1310,6 +1310,130 @@ img {
   margin: 0;
 }
 
+/* Logo Ticker Section */
+.logo-ticker-section {
+  padding: 2.2rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface-solid) 30%, transparent);
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+
+.ticker-label {
+  text-align: center;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: "JetBrains Mono", monospace;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+  font-weight: 800;
+}
+
+.logo-ticker-wrap {
+  display: flex;
+  overflow: hidden;
+  width: 100%;
+  user-select: none;
+  position: relative;
+}
+
+/* Add mask gradient to fade edges (looks super premium!) */
+.logo-ticker-wrap::before,
+.logo-ticker-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 100px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.logo-ticker-wrap::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg) 0%, transparent 100%);
+}
+
+.logo-ticker-wrap::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg) 0%, transparent 100%);
+}
+
+.logo-ticker {
+  display: flex;
+  width: max-content;
+  animation: scrollTicker 30s linear infinite;
+}
+
+.logo-slide {
+  display: flex;
+  align-items: center;
+  gap: 4.5rem;
+  padding-right: 4.5rem;
+}
+
+.plc-brand-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 0.95rem;
+  transition: color 0.3s ease, opacity 0.3s ease;
+  opacity: 0.45;
+}
+
+.plc-brand-item svg {
+  transition: transform 0.3s ease;
+  fill: currentColor;
+}
+
+.plc-brand-item:hover {
+  color: var(--text);
+  opacity: 1;
+}
+
+.plc-brand-item:hover svg {
+  transform: scale(1.05);
+}
+
+/* Specific brand color highlights on hover */
+.ab-brand:hover .brand-color-fill {
+  fill: #e2231a !important;
+}
+
+.siemens-brand:hover .brand-color-fill {
+  fill: #009999 !important;
+}
+
+.schneider-brand:hover .brand-color-fill {
+  fill: #3dcd58 !important;
+}
+
+.omron-brand:hover .brand-color-fill {
+  fill: #005eb8 !important;
+}
+
+.abb-brand:hover .brand-color-fill {
+  fill: #ff0000 !important;
+}
+
+.beckhoff-brand:hover .brand-color-fill {
+  fill: #ff0000 !important;
+}
+
+@keyframes scrollTicker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 1050px) {
   .capabilities-grid {
