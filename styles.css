@@ -1413,6 +1413,14 @@ img {
   fill: #3dcd58 !important;
 }
 
+.mitsubishi-brand:hover .brand-color-fill {
+  fill: #e60012 !important;
+}
+
+.toyopuc-brand:hover .brand-color-fill {
+  fill: #004098 !important;
+}
+
 .omron-brand:hover .brand-color-fill {
   fill: #005eb8 !important;
 }
