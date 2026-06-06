@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de PLC Ladder y Celda Robótica</title>
+    <!-- Tailwind CSS para diseño moderno (seguro dentro de iframe) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050b16; /* Fondeado oscuro a juego con styles.css */
+        }
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        /* Efecto de brillo de corriente eléctrica */
+        .energized {
+            stroke: #10b981;
+            filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.8));
+        }
+        .energized-text {
+            color: #10b981;
+            text-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+        .energized-bg {
+            background-color: rgba(16, 185, 129, 0.12);
+            border-color: #10b981;
+        }
+        /* Estilos del PLC Ladder */
+        .ladder-rail {
+            stroke: #475569;
+            stroke-width: 4;
+        }
+        .ladder-rail-power {
+            stroke: #10b981;
+            stroke-width: 4;
+            filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6));
+        }
+        #robot-canvas {
+            background: radial-gradient(circle at 50% 35%, rgba(56,189,248,0.08), transparent 50%), #090f1d;
+        }
+        #virtual-cursor {
+            transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="text-slate-100 overflow-x-hidden min-h-screen flex flex-col justify-between p-2">
+
+    <div class="w-full flex-1 flex flex-col gap-4">
+        <!-- Cabecera Principal -->
+        <header class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/30">
+                    <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                        TwinControl Pro <span class="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">v4.2.1</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">Gemelo Digital: Programación de PLC Ladder y Control de Celda de Paletizado</p>
+                </div>
+            </div>
+
+            <!-- Selector de Modos de Simulación -->
+            <div class="flex items-center gap-2 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
+                <button id="btn-mode-auto" onclick="setMode('AUTO')" class="px-3 py-1.5 font-semibold rounded transition-all bg-emerald-500 text-slate-950 shadow-md">
+                    Modo Demo (Programador)
+                </button>
+                <button id="btn-mode-manual" onclick="setMode('MANUAL')" class="px-3 py-1.5 font-semibold rounded transition-all text-slate-400 hover:text-white">
+                    Modo Libre (Interactivo)
+                </button>
+            </div>
+        </header>
+
+        <!-- Contenido Principal -->
+        <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+            
+            <!-- COLUMNA IZQUIERDA: Entorno IDE de Programación PLC (7 columnas) -->
+            <section class="lg:col-span-7 bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[560px] relative">
+                
+                <!-- Barra de Herramientas del IDE -->
+                <div class="bg-slate-950 px-4 py-2 flex items-center justify-between border-b border-slate-800 text-[11px] select-none">
+                    <div class="flex items-center gap-4">
+                        <span class="font-semibold text-slate-400">PROYECTO: <span class="text-slate-200">Main_Palletizer_PLC</span></span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" id="plc-status-dot"></span>
+                            <span class="text-slate-300 font-medium" id="plc-status-text">OFFLINE [FAULT]</span>
+                        </div>
+                    </div>
+                    <!-- Botones del Programador en IDE -->
+                    <div class="flex items-center gap-2">
+                        <button id="btn-compile" onclick="triggerCompile()" class="bg-slate-850 hover:bg-slate-800 text-slate-300 px-2.5 py-1 rounded border border-slate-700 flex items-center gap-1 transition-colors">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"/></svg>
+                            Compilar
+                        </button>
+                        <button id="btn-download" onclick="triggerDownload()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded flex items-center gap-1 transition-colors font-medium">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            Cargar a PLC
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pestañas de Trabajo -->
+                <div class="bg-slate-900/40 border-b border-slate-800 flex text-[10px] select-none">
+                    <div class="bg-slate-950 text-emerald-400 px-3 py-1.5 border-r border-slate-800 border-b-2 border-b-emerald-500 font-medium flex items-center gap-1 cursor-pointer">
+                        Routine [Ladder]
+                    </div>
+                    <div class="text-slate-400 px-3 py-1.5 border-r border-slate-800 hover:bg-slate-850 cursor-pointer flex items-center gap-1">
+                        Global_Variables
+                    </div>
+                    <div class="text-slate-400 px-3 py-1.5 border-r border-slate-800 hover:bg-slate-850 cursor-pointer flex items-center gap-1">
+                        HW_Configuration
+                    </div>
+                </div>
+
+                <!-- Área Principal del Diagrama Ladder -->
+                <div id="ladder-workspace" class="flex-1 overflow-y-auto p-4 bg-slate-950/20 relative code-font text-xs">
+                    
+                    <!-- Riel Izquierdo (Power Rail) -->
+                    <div class="absolute left-6 top-0 bottom-0 w-1 bg-slate-700 rounded transition-colors" id="left-rail"></div>
+                    <!-- Riel Derecho (Neutral Rail) -->
+                    <div class="absolute right-6 top-0 bottom-0 w-1 bg-slate-800 rounded"></div>
+
+                    <!-- Lista de Rungs (Escalones) -->
+                    <div class="space-y-6 pl-6 pr-6 relative z-10">
+                        
+                        <!-- RUNGO 0: Control de la Cinta Transportadora -->
+                        <div class="relative">
+                            <span class="absolute -left-5 top-1 text-[10px] font-bold text-slate-600">0</span>
+                            <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
+                                <span>// CONTROL DE MARCHA Y MOTOR CINTA</span>
+                                <span class="text-emerald-500/60" id="rung0-status">OK</span>
+                            </div>
+                            <div class="flex items-center h-12 relative">
+                                <div class="absolute left-0 right-0 h-0.5 bg-slate-700 -z-10" id="line-rung0"></div>
+                                
+                                <!-- Contacto I:0/0 (Marcha) -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-20 text-center cursor-pointer transition-all hover:bg-slate-900" 
+                                     onclick="toggleInput('I:0/0')" id="contact-I00">
+                                    <span class="text-[9px] text-slate-400 font-mono">I:0/0</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">Btn_Marcha</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-I00">-[ ]-</span>
+                                </div>
+
+                                <div class="w-8 h-0.5 bg-slate-700" id="link0-1"></div>
+
+                                <!-- Contacto I:0/1 (E-Stop NC) -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-20 text-center cursor-pointer transition-all hover:bg-slate-900" 
+                                     onclick="toggleInput('I:0/1')" id="contact-I01">
+                                    <span class="text-[9px] text-slate-400 font-mono">I:0/1</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">Estop_OK</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-I01">-[/]-</span>
+                                </div>
+
+                                <div class="flex-1 h-0.5 bg-slate-700" id="link0-2"></div>
+
+                                <!-- Bobina O:0/0 (Motor Cinta) -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-24 text-center" id="coil-O00">
+                                    <span class="text-[9px] text-slate-400 font-mono">O:0/0</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">Motor_Cinta</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-O00">-( )-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RUNGO 1: Sensor de Detección de Caja -->
+                        <div class="relative">
+                            <span class="absolute -left-5 top-1 text-[10px] font-bold text-slate-600">1</span>
+                            <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
+                                <span>// DETECCION SENSOR & RETARDO DE ARRANQUE</span>
+                                <span class="text-emerald-500/60">OK</span>
+                            </div>
+                            <div class="flex items-center h-12 relative">
+                                <div class="absolute left-0 right-0 h-0.5 bg-slate-700 -z-10" id="line-rung1"></div>
+                                
+                                <!-- Contacto I:0/2 (Sensor Presencia) -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-20 text-center cursor-pointer transition-all hover:bg-slate-900" 
+                                     onclick="toggleInput('I:0/2')" id="contact-I02">
+                                    <span class="text-[9px] text-slate-400 font-mono">I:0/2</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">Sensor_Caja</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-I02">-[ ]-</span>
+                                </div>
+
+                                <div class="w-8 h-0.5 bg-slate-700" id="link1-1"></div>
+
+                                <!-- Bloque Temporizador TON T4:0 -->
+                                <div class="flex flex-col bg-slate-950 border border-slate-800 rounded px-2 py-0.5 w-32 text-[10px]" id="timer-T40">
+                                    <div class="text-[9px] text-cyan-400 font-bold border-b border-slate-800 flex justify-between">
+                                        <span>TON</span>
+                                        <span>T4:0</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 text-[9px] mt-0.5">
+                                        <span class="text-slate-500">Preset:</span>
+                                        <span class="text-right text-slate-300">1.0s</span>
+                                        <span class="text-slate-500">Acum:</span>
+                                        <span class="text-right text-cyan-400 font-bold animate-pulse" id="timer-accum">0.0s</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex-1 h-0.5 bg-slate-700" id="link1-2"></div>
+
+                                <!-- Bobina Virtual T4:0/DN (Temporizado Listo) -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-24 text-center" id="coil-T40">
+                                    <span class="text-[9px] text-slate-400 font-mono">T4:0/DN</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">Temp_Listo</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-T40">-( )-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RUNGO 2: Activación del Brazo Robótico (CONTIENE EL ERROR AL INICIO) -->
+                        <div class="relative">
+                            <span class="absolute -left-5 top-1 text-[10px] font-bold text-slate-600">2</span>
+                            <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
+                                <span>// LOGICA DE RECOGIDA - ACTIVAR ROBOT</span>
+                                <span class="text-rose-500 font-mono flex items-center gap-1 font-bold" id="rung2-status-tag">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> ERROR DE TAG
+                                </span>
+                            </div>
+                            <div class="flex items-center h-12 relative">
+                                <div class="absolute left-0 right-0 h-0.5 bg-slate-700 -z-10" id="line-rung2"></div>
+                                
+                                <!-- Contacto T4:0/DN -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-20 text-center cursor-not-allowed" id="contact-T40DN">
+                                    <span class="text-[9px] text-slate-400 font-mono">T4:0/DN</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">Temp_Listo</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-T40DN">-[ ]-</span>
+                                </div>
+
+                                <div class="w-8 h-0.5 bg-slate-700" id="link2-1"></div>
+
+                                <!-- CONTACTO ERRÓNEO: I:0/9 (No conectado) -> Se corregirá a I:0/2 -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-rose-500 rounded px-1.5 py-0.5 w-24 text-center cursor-pointer transition-all hover:bg-slate-900 relative shadow-md shadow-rose-500/10" 
+                                     onclick="startInlineEditor()" id="contact-bug">
+                                    <span class="text-[9px] text-rose-400 font-mono font-bold animate-pulse" id="contact-bug-tag">I:0/9 [!]</span>
+                                    <span class="text-[9px] text-slate-400 truncate w-full" id="contact-bug-desc">Tag_Erroneo</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-I09">-[ ]-</span>
+                                    <div class="absolute -top-1 -right-1 bg-rose-500 w-2 h-2 rounded-full border border-slate-950" id="contact-bug-glow"></div>
+                                </div>
+
+                                <div class="flex-1 h-0.5 bg-slate-700" id="link2-2"></div>
+
+                                <!-- Bobina O:0/1 (Activar Robot) -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-24 text-center" id="coil-O01">
+                                    <span class="text-[9px] text-slate-400 font-mono">O:0/1</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">Activar_Rob</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-O01">-( )-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RUNGO 3: Actuador del Gripper (Ventosa) -->
+                        <div class="relative">
+                            <span class="absolute -left-5 top-1 text-[10px] font-bold text-slate-600">3</span>
+                            <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
+                                <span>// CONTROL SUCCION DE PINZA (VENTOSA)</span>
+                                <span class="text-emerald-500/60" id="rung3-status">OK</span>
+                            </div>
+                            <div class="flex items-center h-12 relative">
+                                <div class="absolute left-0 right-0 h-0.5 bg-slate-700 -z-10" id="line-rung3"></div>
+                                
+                                <!-- Contacto O:0/1 -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-20 text-center cursor-not-allowed" id="contact-O01-suct">
+                                    <span class="text-[9px] text-slate-400 font-mono">O:0/1</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">Rob_Activo</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-O01-suct">-[ ]-</span>
+                                </div>
+
+                                <div class="w-8 h-0.5 bg-slate-700" id="link3-1"></div>
+
+                                <!-- Contacto I:0/3 (En Zona Pick) -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-24 text-center cursor-pointer transition-all hover:bg-slate-900" 
+                                     onclick="toggleInput('I:0/3')" id="contact-I03">
+                                    <span class="text-[9px] text-slate-400 font-mono">I:0/3</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">En_Zona_Pick</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-I03">-[ ]-</span>
+                                </div>
+
+                                <div class="flex-1 h-0.5 bg-slate-700" id="link3-2"></div>
+
+                                <!-- Bobina O:0/2 (Ventosa) -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-24 text-center" id="coil-O02">
+                                    <span class="text-[9px] text-slate-400 font-mono">O:0/2</span>
+                                    <span class="text-[9px] text-slate-300 truncate w-full">Ventosa_On</span>
+                                    <span class="text-sm font-bold text-slate-500" id="state-O02">-( )-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Cursor del Programador Automático -->
+                    <div id="virtual-cursor" class="absolute w-8 h-8 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 opacity-0">
+                        <svg class="w-6 h-6 text-cyan-400 filter drop-shadow(0 0 4px rgba(34, 211, 238, 0.8))" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" transform="rotate(-45 10 10)"/>
+                        </svg>
+                        <span class="absolute left-6 top-3 text-[9px] bg-cyan-500 text-slate-950 font-bold px-1 py-0.2 rounded shadow font-sans whitespace-nowrap">Dev_PLC_Robot</span>
+                    </div>
+                    
+                    <!-- Editor de Tag Flotante -->
+                    <div id="inline-editor" class="absolute bg-slate-900 border border-cyan-500 rounded p-1 shadow-2xl hidden z-50 flex gap-1">
+                        <input type="text" id="inline-editor-input" class="bg-slate-950 text-cyan-300 font-mono text-[10px] px-1 py-0.5 w-16 outline-none border border-slate-700 rounded" value="">
+                        <button onclick="applyInlineEdit()" class="bg-cyan-500 text-slate-950 px-1.5 py-0.5 text-[9px] font-bold rounded hover:bg-cyan-400">OK</button>
+                    </div>
+
+                </div>
+
+                <!-- Consola del programador -->
+                <div class="bg-slate-950 border-t border-slate-800 p-2 h-24 text-[10px] code-font flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-slate-500 border-b border-slate-900 pb-0.5 mb-0.5">
+                        <span>CONSOLA DE COMPILACIÓN Y DIAGNÓSTICO</span>
+                        <button onclick="clearConsole()" class="hover:text-slate-300 text-[9px]">Limpiar</button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto space-y-0.5" id="terminal-log">
+                        <div class="text-slate-500">[07:15:02] Iniciando sistema de simulación...</div>
+                        <div class="text-rose-400 animate-pulse">[07:15:03] ERROR: La bobina de activación del Robot O:0/1 no enclava. Referencia de Tag 'I:0/9' no válida. Habilite depuración.</div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- COLUMNA DERECHA: Celda de Paletizado con Brazo Robótico (5 columnas) -->
+            <section class="lg:col-span-5 bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[560px]">
+                
+                <div class="bg-slate-950 px-3 py-2.5 border-b border-slate-800 flex items-center justify-between text-[10px]">
+                    <span class="font-bold text-slate-200 tracking-wider">VISTA DE LA CELDA INDUSTRIAL</span>
+                    <span class="bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded border border-rose-500/20 text-[9px] flex items-center gap-1" id="hazard-banner">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> CELDA BLOQUEADA
+                    </span>
+                </div>
+
+                <!-- Panel Superior de Diagnóstico Robótico -->
+                <div class="bg-slate-900 p-2 grid grid-cols-4 gap-1.5 text-center text-[9px] border-b border-slate-800">
+                    <div class="bg-slate-950/60 p-1 rounded border border-slate-800">
+                        <div class="text-slate-500">CONVEYOR</div>
+                        <div class="font-bold text-slate-300" id="panel-conveyor">APAGADO</div>
+                    </div>
+                    <div class="bg-slate-950/60 p-1 rounded border border-slate-800">
+                        <div class="text-slate-500">SENSOR CAJA</div>
+                        <div class="font-bold text-slate-300" id="panel-sensor">LIBRE</div>
+                    </div>
+                    <div class="bg-slate-950/60 p-1 rounded border border-slate-800">
+                        <div class="text-slate-500">ROBOT</div>
+                        <div class="font-bold text-slate-300" id="panel-robot">OFFLINE</div>
+                    </div>
+                    <div class="bg-slate-950/60 p-1 rounded border border-slate-800">
+                        <div class="text-slate-500">VENTOSA</div>
+                        <div class="font-bold text-slate-300" id="panel-suction">APAGADA</div>
+                    </div>
+                </div>
+
+                <!-- Panel de producción -->
+                <div class="bg-slate-950/95 px-3 py-1.5 border-b border-slate-800 space-y-1.5">
+                    <div class="grid grid-cols-3 gap-1.5 text-center text-[9px]">
+                        <div class="bg-slate-900/80 p-1 rounded border border-slate-800">
+                            <div class="text-slate-500">CICLOS OK</div>
+                            <div class="font-bold text-emerald-400 text-sm" id="counter-cycles">0</div>
+                        </div>
+                        <div class="bg-slate-900/80 p-1 rounded border border-slate-800">
+                            <div class="text-slate-500">PALLETS</div>
+                            <div class="font-bold text-yellow-400 text-sm" id="counter-pallets">0</div>
+                        </div>
+                        <div class="bg-slate-900/80 p-1 rounded border border-slate-800">
+                            <div class="text-slate-500">ALTURA PILA</div>
+                            <div class="font-bold text-cyan-400 text-sm" id="counter-stack">0/3</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-3 text-[9px]">
+                        <span class="font-bold text-slate-500">VELOCIDAD CINTA</span>
+                        <input id="speed-slider" type="range" min="0.25" max="1.50" step="0.05" value="0.75" oninput="setConveyorSpeed(this.value)" class="w-24 h-1 bg-slate-800 rounded outline-none accent-cyan-400">
+                        <span id="speed-readout" class="font-mono text-cyan-400 font-bold w-8 text-right">0.75x</span>
+                    </div>
+                </div>
+
+                <!-- Lienzo de la Simulación Gráfica -->
+                <div class="flex-1 bg-slate-950 relative overflow-hidden flex items-center justify-center">
+                    <canvas id="robot-canvas" width="400" height="260" class="w-full h-full block"></canvas>
+                    
+                    <!-- Pantalla de Fallo Inicial -->
+                    <div id="plc-fault-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-[1px] flex flex-col justify-center items-center text-center p-4">
+                        <div class="w-10 h-10 bg-rose-500/10 border border-rose-500 text-rose-500 rounded-full flex items-center justify-center mb-2 text-lg animate-bounce">
+                            ⚠
+                        </div>
+                        <h3 class="text-xs font-bold text-white mb-1">¡FALLO EN PROGRAMA LADDER!</h3>
+                        <p class="text-[10px] text-slate-400 max-w-[240px]">El robot no recibe señal debido a la variable equivocada 'I:0/9' en el escalón 2. Modifícalo a 'I:0/2' o activa el modo Demo.</p>
+                        <button onclick="setMode('AUTO')" class="mt-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-3 py-1 rounded text-[10px] font-bold transition-colors">
+                            Ejecutar Auto-Depuración
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Forzado manual de entradas -->
+                <div class="bg-slate-950 p-2.5 border-t border-slate-800 space-y-1.5">
+                    <div class="flex justify-between items-center text-[9px] text-slate-500">
+                        <span class="font-bold" id="manual-controls-title">MODO DEMO ACTIVO (LOCKED)</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-1">
+                        <button id="btn-force-start" onclick="forceManualInput('I:0/0')" class="bg-slate-900 border border-slate-800 text-[8px] text-slate-400 py-1.5 rounded hover:bg-slate-850 transition-colors flex flex-col items-center cursor-not-allowed">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500 mb-0.5" id="led-force-start"></span>
+                            I:0/0 Marcha
+                        </button>
+                        <button id="btn-force-estop" onclick="forceManualInput('I:0/1')" class="bg-slate-900 border border-slate-800 text-[8px] text-slate-400 py-1.5 rounded hover:bg-slate-850 transition-colors flex flex-col items-center cursor-not-allowed">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mb-0.5" id="led-force-estop"></span>
+                            I:0/1 E-Stop OK
+                        </button>
+                        <button id="btn-force-sensor" onclick="forceManualInput('I:0/2')" class="bg-slate-900 border border-slate-800 text-[8px] text-slate-400 py-1.5 rounded hover:bg-slate-850 transition-colors flex flex-col items-center cursor-not-allowed">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500 mb-0.5" id="led-force-sensor"></span>
+                            I:0/2 Presencia
+                        </button>
+                        <button id="btn-spawn-box" onclick="spawnManualBox()" class="bg-cyan-950/20 border border-cyan-800/40 text-[8px] text-cyan-400 py-1.5 rounded hover:bg-cyan-950/50 transition-colors font-bold cursor-not-allowed">
+                            ➕ Caja
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+
+        </div>
+    </div>
+
+    <!-- LOGICA DEL SIMULADOR -->
+    <script>
+        // Configuración del PLC
+        const plc = {
+            inputs: {
+                "I:0/0": false,
+                "I:0/1": true,  // Estop OK (NC)
+                "I:0/2": false, // Sensor presencia
+                "I:0/3": false, // Robot en zona de agarre
+                "I:0/9": false
+            },
+            outputs: {
+                "O:0/0": false, // Motor cinta
+                "O:0/1": false, // Activar robot
+                "O:0/2": false  // Ventosa
+            },
+            timers: {
+                "T4:0": { acc: 0, pre: 1000, dn: false, en: false }
+            },
+            rung2Contact: "I:0/9",
+            status: "FAULT",
+            mode: "AUTO"
+        };
+
+        // Configuración Física del Canvas de Simulación
+        const canvas = document.getElementById('robot-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Geometría del robot 2D de dos eslabones (Base en 200, 210)
+        const BASE_X = 200;
+        const BASE_Y = 210;
+        const L1 = 70;
+        const L2 = 70;
+
+        // Posiciones lógicas importantes
+        const PICKUP_X = 90;
+        const PICKUP_Y = 195;
+        const DROP_X = 310;
+        const DROP_Y = 205;
+        const HOME_X = 180;
+        const HOME_Y = 110;
+
+        const robot = {
+            x: HOME_X,
+            y: HOME_Y,
+            targetX: HOME_X,
+            targetY: HOME_Y,
+            speed: 0.05,
+            state: "IDLE", // IDLE, HOME, MOVE_TO_PICK, PICKING, MOVE_TO_DROP, DROPPING, MOVE_TO_HOME
+            hasBox: false,
+            theta1: 0,
+            theta2: 0,
+            rotation: 0
+        };
+
+        const conveyor = {
+            y: 200,
+            sensorX: 90,
+            speed: 0.75
+        };
+
+        let boxesOnConveyor = [];
+        let boxesOnPallet = [];
+
+        const process = {
+            cycleInProgress: false,
+            boxReady: false,
+            cyclesCompleted: 0,
+            palletsCompleted: 0,
+            alarms: []
+        };
+
+        // Variables de Simulación del Programador Fantasma (Demo)
+        let demoPhase = 0;
+        let demoTimer = 0;
+        let compiled = false;
+        let downloaded = false;
+
+        // --- SISTEMA DE LOGS Y TERMINAL ---
+        function writeLog(text, type = "info") {
+            const logContainer = document.getElementById('terminal-log');
+            const logEntry = document.createElement('div');
+            const timeStr = new Date().toTimeString().split(' ')[0];
+            
+            if (type === "error") {
+                logEntry.className = "text-rose-400 animate-pulse";
+                logEntry.innerHTML = `[${timeStr}] ❌ ${text}`;
+            } else if (type === "success") {
+                logEntry.className = "text-emerald-400 font-bold";
+                logEntry.innerHTML = `[${timeStr}] ✔ ${text}`;
+            } else if (type === "warn") {
+                logEntry.className = "text-yellow-400";
+                logEntry.innerHTML = `[${timeStr}] ⚠ ${text}`;
+            } else if (type === "blue") {
+                logEntry.className = "text-cyan-400";
+                logEntry.innerHTML = `[${timeStr}] ⌨ ${text}`;
+            } else {
+                logEntry.className = "text-slate-400";
+                logEntry.innerHTML = `[${timeStr}] ℹ ${text}`;
+            }
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('terminal-log').innerHTML = "";
+        }
+
+        function setConveyorSpeed(value) {
+            conveyor.speed = parseFloat(value) || 0.75;
+            document.getElementById('speed-readout').textContent = conveyor.speed.toFixed(2) + "x";
+        }
+
+        // --- ENTORNO DE SIMULACIÓN Y EVENTOS ---
+        function setMode(mode) {
+            plc.mode = mode;
+            demoPhase = 0;
+            demoTimer = 0;
+            
+            const btnAuto = document.getElementById('btn-mode-auto');
+            const btnManual = document.getElementById('btn-mode-manual');
+            const manualTitle = document.getElementById('manual-controls-title');
+            
+            const forceStart = document.getElementById('btn-force-start');
+            const forceEstop = document.getElementById('btn-force-estop');
+            const forceSensor = document.getElementById('btn-force-sensor');
+            const spawnBoxBtn = document.getElementById('btn-spawn-box');
+
+            if (mode === 'AUTO') {
+                btnAuto.className = "px-3 py-1.5 font-semibold rounded bg-emerald-500 text-slate-950 shadow-md";
+                btnManual.className = "px-3 py-1.5 font-semibold rounded text-slate-400 hover:text-white";
+                manualTitle.textContent = "Modo Demo Activo (Lectura)";
+                
+                // Deshabilitar forzados manuales
+                [forceStart, forceEstop, forceSensor, spawnBoxBtn].forEach(btn => {
+                    btn.classList.add('cursor-not-allowed');
+                });
+                
+                // Reset PLC state
+                plc.rung2Contact = "I:0/9";
+                plc.status = "FAULT";
+                compiled = false;
+                downloaded = false;
+                document.getElementById('plc-fault-overlay').classList.remove('hidden');
+                document.getElementById('rung2-status-tag').className = "text-rose-500 font-mono flex items-center gap-1 font-bold";
+                document.getElementById('rung2-status-tag').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> ERROR DE TAG';
+                document.getElementById('contact-bug-tag').className = "text-rose-400 font-mono font-bold animate-pulse";
+                document.getElementById('contact-bug-tag').textContent = "I:0/9 [!]";
+                document.getElementById('contact-bug-desc').textContent = "Tag_Erroneo";
+                document.getElementById('contact-bug').classList.add('border-rose-500');
+                
+                writeLog("Modo automático de depuración iniciado.", "info");
+            } else {
+                btnManual.className = "px-3 py-1.5 font-semibold rounded bg-cyan-500 text-slate-950 shadow-md";
+                btnAuto.className = "px-3 py-1.5 font-semibold rounded text-slate-400 hover:text-white";
+                manualTitle.textContent = "Controles de Estación Habilitados";
+                
+                // Habilitar forzados manuales
+                [forceStart, forceEstop, forceSensor, spawnBoxBtn].forEach(btn => {
+                    btn.classList.remove('cursor-not-allowed');
+                });
+                
+                document.getElementById('virtual-cursor').style.opacity = 0;
+                writeLog("Modo manual habilitado. Puedes editar el tag erróneo haciendo clic en él.", "blue");
+            }
+        }
+
+        function toggleInput(address) {
+            if (plc.mode === 'AUTO') return;
+            if (address === 'I:0/1') {
+                plc.inputs[address] = !plc.inputs[address];
+                document.getElementById('led-force-estop').className = `w-1.5 h-1.5 rounded-full mb-0.5 ${plc.inputs[address] ? 'bg-emerald-500' : 'bg-slate-500'}`;
+            } else if (address === 'I:0/0') {
+                plc.inputs[address] = !plc.inputs[address];
+                document.getElementById('led-force-start').className = `w-1.5 h-1.5 rounded-full mb-0.5 ${plc.inputs[address] ? 'bg-emerald-500' : 'bg-slate-500'}`;
+            } else if (address === 'I:0/2') {
+                plc.inputs[address] = !plc.inputs[address];
+                document.getElementById('led-force-sensor').className = `w-1.5 h-1.5 rounded-full mb-0.5 ${plc.inputs[address] ? 'bg-emerald-500' : 'bg-slate-500'}`;
+            }
+        }
+
+        function forceManualInput(address) {
+            toggleInput(address);
+        }
+
+        function spawnManualBox() {
+            if (plc.mode === 'AUTO') return;
+            if (!plc.inputs["I:0/1"]) return; // Emergency stop active
+            if (boxesOnConveyor.length === 0 && !process.cycleInProgress) {
+                boxesOnConveyor.push({ x: 0, y: conveyor.y - 12, w: 24, h: 24 });
+                writeLog("Caja generada en cinta transportadora de manera manual.", "info");
+            }
+        }
+
+        // --- COMPILACIÓN E INSTALACIÓN DEL PROGRAMA LADDER ---
+        function triggerCompile() {
+            writeLog("Compilando MainRoutine...", "info");
+            setTimeout(() => {
+                if (plc.rung2Contact === "I:0/2") {
+                    compiled = true;
+                    writeLog("Compilación completa. 0 Errores, 0 Advertencias.", "success");
+                } else {
+                    compiled = false;
+                    writeLog("ERROR DE COMPILACIÓN: Referencia 'I:0/9' no apunta a ninguna dirección física en chasis PLC.", "error");
+                }
+            }, 800);
+        }
+
+        function triggerDownload() {
+            if (!compiled) {
+                writeLog("No se puede cargar al PLC: Compile el proyecto primero y solucione errores.", "error");
+                return;
+            }
+            writeLog("Descargando proyecto al controlador PLC...", "info");
+            setTimeout(() => {
+                downloaded = true;
+                plc.status = "RUN";
+                document.getElementById('plc-status-dot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('plc-status-text').textContent = "ONLINE [RUN]";
+                document.getElementById('plc-fault-overlay').classList.add('hidden');
+                
+                // Iniciar Marcha
+                plc.inputs["I:0/0"] = true;
+                
+                writeLog("Carga exitosa. PLC en modo ONLINE [RUN]. Marcha activada.", "success");
+            }, 800);
+        }
+
+        // --- EDITOR FLOTANTE LADDER ---
+        function startInlineEditor() {
+            if (plc.mode === 'AUTO') return;
+            const element = document.getElementById('contact-bug');
+            const editor = document.getElementById('inline-editor');
+            const input = document.getElementById('inline-editor-input');
+            
+            const rect = element.getBoundingClientRect();
+            const parentRect = document.getElementById('ladder-workspace').getBoundingClientRect();
+            
+            editor.style.left = `${rect.left - parentRect.left}px`;
+            editor.style.top = `${rect.top - parentRect.top - 40}px`;
+            editor.classList.remove('hidden');
+            
+            input.value = plc.rung2Contact;
+            input.focus();
+            input.select();
+        }
+
+        function applyInlineEdit() {
+            const input = document.getElementById('inline-editor-input').value.trim();
+            const editor = document.getElementById('inline-editor');
+            editor.classList.add('hidden');
+            
+            plc.rung2Contact = input;
+            
+            if (input === "I:0/2") {
+                document.getElementById('contact-bug-tag').className = "text-emerald-400 font-mono font-bold";
+                document.getElementById('contact-bug-tag').textContent = "I:0/2";
+                document.getElementById('contact-bug-desc').textContent = "Sensor_Caja";
+                document.getElementById('contact-bug').className = "flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-24 text-center cursor-pointer transition-all hover:bg-slate-900 relative";
+                document.getElementById('contact-bug-glow').classList.add('hidden');
+                document.getElementById('rung2-status-tag').className = "text-emerald-500/60 font-mono";
+                document.getElementById('rung2-status-tag').textContent = "OK";
+                writeLog(`Variable en Rung 2 editada a: '${input}'`, "blue");
+            } else {
+                document.getElementById('contact-bug-tag').className = "text-rose-400 font-mono font-bold animate-pulse";
+                document.getElementById('contact-bug-tag').textContent = `${input} [!]`;
+                document.getElementById('contact-bug-desc').textContent = "Desconocido";
+                document.getElementById('contact-bug-glow').classList.remove('hidden');
+                document.getElementById('rung2-status-tag').className = "text-rose-500 font-mono flex items-center gap-1 font-bold";
+                document.getElementById('rung2-status-tag').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> ERROR DE TAG';
+                writeLog(`Tag editado a dirección incorrecta: '${input}'`, "warn");
+            }
+            compiled = false;
+        }
+
+        // --- GLOW EFFECTS EN LADDER ---
+        function updateElementGlow(id, energized) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (energized && plc.status === "RUN") {
+                el.classList.add('energized-bg');
+                el.style.borderColor = '#10b981';
+            } else {
+                el.classList.remove('energized-bg');
+                el.style.borderColor = '#334155';
+            }
+        }
+
+        function updateRungLineGlow(id, energized) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (energized && plc.status === "RUN") {
+                el.style.backgroundColor = '#10b981';
+                el.style.boxShadow = '0 0 6px rgba(16, 185, 129, 0.8)';
+            } else {
+                el.style.backgroundColor = '#334155';
+                el.style.boxShadow = 'none';
+            }
+        }
+
+        // --- CINEMÁTICA Y DIBUJO ---
+        // Cinemática Inversa para brazo de 2 eslabones
+        function calculateIK(tx, ty) {
+            const dx = tx - BASE_X;
+            const dy = ty - BASE_Y;
+            const d = Math.sqrt(dx*dx + dy*dy);
+            
+            const maxReach = L1 + L2 - 1;
+            let targetX = tx;
+            let targetY = ty;
+            
+            if (d > maxReach) {
+                const angle = Math.atan2(dy, dx);
+                targetX = BASE_X + maxReach * Math.cos(angle);
+                targetY = BASE_Y + maxReach * Math.sin(angle);
+            }
+            
+            const dx_c = targetX - BASE_X;
+            const dy_c = targetY - BASE_Y;
+            const d_c = Math.sqrt(dx_c*dx_c + dy_c*dy_c);
+            
+            let cos2 = (d_c*d_c - L1*L1 - L2*L2) / (2 * L1 * L2);
+            cos2 = Math.max(-1, Math.min(1, cos2));
+            const theta2 = Math.acos(cos2);
+            
+            const theta1 = Math.atan2(dy_c, dx_c) - Math.atan2(L2 * Math.sin(theta2), L1 + L2 * Math.cos(theta2));
+            
+            return { theta1, theta2, wristX: targetX, wristY: targetY };
+        }
+
+        // --- BUCLE DE SIMULACIÓN Y ANIMACIÓN ---
+        function updateSimulation(time) {
+            const deltaTime = Math.min(50, time - lastTime);
+            lastTime = time;
+
+            // 1. SCAN PLC
+            scanPLC(deltaTime);
+            updateLadderUI();
+
+            // 2. LOGICA DEMO (PROGRAMADOR FANTASMA)
+            if (plc.mode === 'AUTO') {
+                demoTimer += deltaTime;
+                const cursor = document.getElementById('virtual-cursor');
+                
+                if (demoPhase === 0 && demoTimer > 1500) {
+                    // Fase 1: Mover al contacto erróneo
+                    cursor.style.opacity = 1;
+                    const contact = document.getElementById('contact-bug');
+                    const cRect = contact.getBoundingClientRect();
+                    const wRect = document.getElementById('ladder-workspace').getBoundingClientRect();
+                    
+                    cursor.style.left = `${cRect.left - wRect.left + 20}px`;
+                    cursor.style.top = `${cRect.top - wRect.top + 20}px`;
+                    
+                    demoPhase = 1;
+                    demoTimer = 0;
+                    writeLog("Analizando código... Cursor de programador ubicado en tag de fallo.", "info");
+                }
+                else if (demoPhase === 1 && demoTimer > 1800) {
+                    // Fase 2: Abrir editor y simular tipado
+                    const contact = document.getElementById('contact-bug');
+                    const editor = document.getElementById('inline-editor');
+                    const input = document.getElementById('inline-editor-input');
+                    
+                    const rect = contact.getBoundingClientRect();
+                    const parentRect = document.getElementById('ladder-workspace').getBoundingClientRect();
+                    
+                    editor.style.left = `${rect.left - parentRect.left}px`;
+                    editor.style.top = `${rect.top - parentRect.top - 40}px`;
+                    editor.classList.remove('hidden');
+                    
+                    input.value = "I:0/9";
+                    
+                    demoPhase = 2;
+                    demoTimer = 0;
+                }
+                else if (demoPhase === 2 && demoTimer > 800) {
+                    // Corregir el tag
+                    const input = document.getElementById('inline-editor-input');
+                    input.value = "I:0/2";
+                    demoPhase = 3;
+                    demoTimer = 0;
+                }
+                else if (demoPhase === 3 && demoTimer > 1000) {
+                    // Aplicar corrección
+                    applyInlineEdit();
+                    demoPhase = 4;
+                    demoTimer = 0;
+                }
+                else if (demoPhase === 4 && demoTimer > 1000) {
+                    // Mover a "Compilar"
+                    const btnCompile = document.getElementById('btn-compile');
+                    const rect = btnCompile.getBoundingClientRect();
+                    const wRect = document.getElementById('ladder-workspace').getBoundingClientRect();
+                    
+                    cursor.style.left = `${rect.left - wRect.left + 30}px`;
+                    cursor.style.top = `${rect.top - wRect.top + 15}px`;
+                    
+                    demoPhase = 5;
+                    demoTimer = 0;
+                }
+                else if (demoPhase === 5 && demoTimer > 1000) {
+                    // Compilar
+                    triggerCompile();
+                    demoPhase = 6;
+                    demoTimer = 0;
+                }
+                else if (demoPhase === 6 && demoTimer > 1500) {
+                    // Mover a "Cargar"
+                    const btnDownload = document.getElementById('btn-download');
+                    const rect = btnDownload.getBoundingClientRect();
+                    const wRect = document.getElementById('ladder-workspace').getBoundingClientRect();
+                    
+                    cursor.style.left = `${rect.left - wRect.left + 30}px`;
+                    cursor.style.top = `${rect.top - wRect.top + 15}px`;
+                    
+                    demoPhase = 7;
+                    demoTimer = 0;
+                }
+                else if (demoPhase === 7 && demoTimer > 1200) {
+                    // Cargar a PLC
+                    triggerDownload();
+                    demoPhase = 8;
+                    demoTimer = 0;
+                }
+                else if (demoPhase === 8 && demoTimer > 1000) {
+                    // Ocultar cursor
+                    cursor.style.opacity = 0;
+                    demoPhase = 9;
+                }
+                
+                // Auto Spawning de caja
+                if (plc.status === "RUN" && boxesOnConveyor.length === 0 && !process.cycleInProgress) {
+                    boxesOnConveyor.push({ x: 0, y: conveyor.y - 12, w: 24, h: 24 });
+                }
+            }
+
+            // 3. LOGICA FISICA Y DE MOVIMIENTO
+            if (plc.status === "RUN" && plc.inputs["I:0/1"]) {
+                
+                // Mover cajas en la cinta
+                if (plc.outputs["O:0/0"]) {
+                    boxesOnConveyor.forEach(box => {
+                        if (box.x < conveyor.sensorX) {
+                            box.x += conveyor.speed * (deltaTime / 12);
+                        } else {
+                            plc.inputs["I:0/2"] = true; // Activa sensor
+                        }
+                    });
+                }
+
+                // Lógica del robot paletizador
+                if (plc.outputs["O:0/1"]) {
+                    const stackHeightOffset = boxesOnPallet.length * 15;
+                    
+                    if (robot.state === "IDLE") {
+                        robot.state = "MOVE_TO_PICK";
+                        robot.targetX = PICKUP_X;
+                        robot.targetY = PICKUP_Y;
+                    }
+                    
+                    if (robot.state === "MOVE_TO_PICK") {
+                        // Mover hacia pick
+                        const dx = robot.targetX - robot.x;
+                        const dy = robot.targetY - robot.y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist > 1.5) {
+                            robot.x += (dx / dist) * robot.speed * deltaTime;
+                            robot.y += (dy / dist) * robot.speed * deltaTime;
+                        } else {
+                            robot.state = "PICKING";
+                            plc.inputs["I:0/3"] = true; // Habilita succion
+                            writeLog("Robot posicionado en zona de recogida. Activando succion.", "info");
+                        }
+                    }
+                    
+                    if (robot.state === "PICKING" && plc.outputs["O:0/2"]) {
+                        // Succionar caja
+                        robot.hasBox = true;
+                        boxesOnConveyor = [];
+                        plc.inputs["I:0/2"] = false; // Desactiva sensor
+                        
+                        setTimeout(() => {
+                            robot.state = "MOVE_TO_DROP";
+                            robot.targetX = DROP_X;
+                            robot.targetY = DROP_Y - stackHeightOffset;
+                            plc.inputs["I:0/3"] = false; // Gripper se levanta de zona pick
+                            writeLog("Caja asegurada. Transportando a pallet.", "info");
+                        }, 500);
+                        robot.state = "HOLD"; // Evitar bucle repetido
+                    }
+
+                    if (robot.state === "MOVE_TO_DROP") {
+                        // Mover hacia drop
+                        const dx = robot.targetX - robot.x;
+                        const dy = robot.targetY - robot.y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist > 1.5) {
+                            robot.x += (dx / dist) * robot.speed * deltaTime;
+                            robot.y += (dy / dist) * robot.speed * deltaTime;
+                        } else {
+                            robot.state = "DROPPING";
+                            writeLog("Caja posicionada en pallet. Desconectando electroválvula.", "info");
+                        }
+                    }
+
+                    if (robot.state === "DROPPING") {
+                        // Soltar
+                        robot.hasBox = false;
+                        boxesOnPallet.push({ x: DROP_X - 12, y: DROP_Y - 12 - stackHeightOffset, w: 24, h: 24 });
+                        process.cyclesCompleted++;
+                        updateProductionPanel();
+                        
+                        setTimeout(() => {
+                            robot.state = "MOVE_TO_HOME";
+                            robot.targetX = HOME_X;
+                            robot.targetY = HOME_Y;
+                            process.cycleInProgress = false; // Fin de ciclo
+                            writeLog("Ciclo completado con éxito.", "success");
+                        }, 400);
+                        robot.state = "HOLD";
+                    }
+
+                    if (robot.state === "MOVE_TO_HOME") {
+                        // Retornar a home
+                        const dx = robot.targetX - robot.x;
+                        const dy = robot.targetY - robot.y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if (dist > 1.5) {
+                            robot.x += (dx / dist) * robot.speed * deltaTime;
+                            robot.y += (dy / dist) * robot.speed * deltaTime;
+                        } else {
+                            robot.state = "IDLE";
+                            
+                            // Check Pallet Completo
+                            if (boxesOnPallet.length >= 3) {
+                                process.palletsCompleted++;
+                                writeLog(`¡PALLET Nº ${process.palletsCompleted} COMPLETADO! Despachando a almacén.`, "success");
+                                boxesOnPallet = [];
+                                updateProductionPanel();
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 4. DIBUJAR EN CANVAS
+            drawCanvas();
+            updateProductionPanel();
+            updateAlarmPanel();
+
+            requestAnimationFrame(updateSimulation);
+        }
+
+        // --- CÓDIGO DE DIBUJO CANVAS ---
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Cinta transportadora
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(10, conveyor.y, 140, 15);
+            ctx.fillStyle = "#0f172a";
+            ctx.strokeRect(10, conveyor.y, 140, 15);
+
+            // Rodillos
+            ctx.fillStyle = "#475569";
+            for (let rx = 20; rx < 150; rx += 25) {
+                ctx.beginPath();
+                ctx.arc(rx, conveyor.y + 7, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Sensor de presencia óptico (LED + Beam)
+            ctx.fillStyle = plc.inputs["I:0/2"] ? "#10b981" : "#ef4444";
+            ctx.fillRect(conveyor.sensorX - 3, conveyor.y - 30, 6, 8);
+            
+            // Haz del sensor
+            ctx.strokeStyle = plc.inputs["I:0/2"] ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.2)";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(conveyor.sensorX, conveyor.y - 22);
+            ctx.lineTo(conveyor.sensorX, conveyor.y);
+            ctx.stroke();
+
+            // Pallet / Destino
+            ctx.fillStyle = "#78350f"; // Madera de pallet
+            ctx.fillRect(290, DROP_Y + 12, 50, 8);
+            ctx.fillStyle = "#451a03";
+            ctx.fillRect(295, DROP_Y + 20, 10, 8);
+            ctx.fillRect(325, DROP_Y + 20, 10, 8);
+
+            // Cajas en la cinta
+            boxesOnConveyor.forEach(box => {
+                ctx.fillStyle = "#b45309"; // Color caja
+                ctx.fillRect(box.x, box.y, box.w, box.h);
+                ctx.strokeStyle = "#78350f";
+                ctx.strokeRect(box.x, box.y, box.w, box.h);
+            });
+
+            // Cajas en el pallet
+            boxesOnPallet.forEach(box => {
+                ctx.fillStyle = "#b45309";
+                ctx.fillRect(box.x, box.y, box.w, box.h);
+                ctx.strokeStyle = "#78350f";
+                ctx.strokeRect(box.x, box.y, box.w, box.h);
+            });
+
+            // --- CINEMÁTICA Y DIBUJO DEL ROBOT ---
+            const ik = calculateIK(robot.x, robot.y);
+            
+            // Hombro / Primer articulacion
+            const shoulderX = BASE_X + L1 * Math.cos(ik.theta1);
+            const shoulderY = BASE_Y + L1 * Math.sin(ik.theta1);
+            
+            // Muñeca / Agarre
+            const wristX = shoulderX + L2 * Math.cos(ik.theta1 + ik.theta2);
+            const wristY = shoulderY + L2 * Math.sin(ik.theta1 + ik.theta2);
+
+            // Dibujar líneas del brazo robótico (Estructura)
+            ctx.strokeStyle = "#38bdf8"; // Azul robótico
+            ctx.lineWidth = 8;
+            ctx.lineCap = "round";
+            
+            ctx.beginPath();
+            ctx.moveTo(BASE_X, BASE_Y);
+            ctx.lineTo(shoulderX, shoulderY);
+            ctx.lineTo(wristX, wristY);
+            ctx.stroke();
+
+            // Articulaciones mecánicas
+            ctx.fillStyle = "#0284c7";
+            ctx.beginPath();
+            ctx.arc(BASE_X, BASE_Y, 8, 0, Math.PI*2);
+            ctx.arc(shoulderX, shoulderY, 6, 0, Math.PI*2);
+            ctx.fill();
+
+            // Soporte de Base
+            ctx.fillStyle = "#334155";
+            ctx.fillRect(BASE_X - 16, BASE_Y, 32, 50);
+
+            // Caja en gripper (Si la tiene agarrada)
+            if (robot.hasBox) {
+                ctx.fillStyle = "#b45309";
+                ctx.fillRect(wristX - 12, wristY, 24, 24);
+                ctx.strokeStyle = "#78350f";
+                ctx.strokeRect(wristX - 12, wristY, 24, 24);
+            }
+
+            // Ventosa / Gripper
+            ctx.fillStyle = plc.outputs["O:0/2"] ? "#10b981" : "#64748b";
+            ctx.fillRect(wristX - 8, wristY - 2, 16, 4);
+            if (plc.outputs["O:0/2"]) {
+                ctx.strokeStyle = "rgba(16,185,129,0.5)";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(wristX, wristY + 4, 6, 0, Math.PI, false);
+                ctx.stroke();
+            }
+
+            // Actualizar panel de diagnóstico
+            const pRobot = document.getElementById('panel-robot');
+            pRobot.innerHTML = robot.state;
+            pRobot.className = `font-bold ${robot.state === 'IDLE' ? 'text-slate-400' : 'text-cyan-400 animate-pulse'}`;
+
+            const pSuction = document.getElementById('panel-suction');
+            pSuction.innerHTML = plc.outputs["O:0/2"] ? "SUCCIÓN" : "APAGADA";
+            pSuction.className = `font-bold ${plc.outputs["O:0/2"] ? 'text-emerald-400 text-shadow-sm' : 'text-slate-400'}`;
+        }
+
+        // --- ARRANQUE ---
+        setMode('AUTO');
+        requestAnimationFrame(updateSimulation);
+    </script>
+
+</body>
+</html>
