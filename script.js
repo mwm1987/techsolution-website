@@ -248,6 +248,14 @@ function translatePage(lang) {
     const original = element.dataset.originalText || element.textContent || "";
     element.textContent = lang === "en" ? (translations.en[original] || original) : original;
   });
+
+  const iframe = document.querySelector('.simulator-iframe');
+  if (iframe) {
+    const currentLangSrc = `simulador.html?lang=${lang}`;
+    if (iframe.getAttribute('src') !== currentLangSrc) {
+      iframe.setAttribute('src', currentLangSrc);
+    }
+  }
 }
 
 function t(spanishText) {
