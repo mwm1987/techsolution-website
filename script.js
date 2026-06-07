@@ -272,14 +272,7 @@ function translatePage(lang) {
     element.textContent = lang === "en" ? (translations.en[original] || original) : original;
   });
 
-  const iframe = document.querySelector('.simulator-iframe');
-  if (iframe) {
-    const activeTheme = localStorage.getItem("techsolutions-theme") || "dark";
-    const currentLangSrc = `simulador.html?lang=${lang}&theme=${activeTheme}&preview=true`;
-    if (iframe.getAttribute('src') !== currentLangSrc) {
-      iframe.setAttribute('src', currentLangSrc);
-    }
-  }
+
 }
 
 function t(spanishText) {
@@ -299,18 +292,7 @@ function setTheme(theme) {
     themeToggle.textContent = theme === "dark" ? "☾" : "☀";
   }
 
-  // Synchronize with simulator iframe dynamically without reload
-  const iframe = document.querySelector('.simulator-iframe');
-  if (iframe) {
-    const currentLang = localStorage.getItem("techsolutions-language") || "es";
-    const targetSrc = `simulador.html?lang=${currentLang}&theme=${theme}&preview=true`;
-    if (iframe.getAttribute('src') !== targetSrc) {
-      iframe.setAttribute('src', targetSrc);
-    }
-    if (iframe.contentWindow) {
-      iframe.contentWindow.postMessage({ type: 'setTheme', theme: theme }, '*');
-    }
-  }
+
 }
 
 setTheme(localStorage.getItem("techsolutions-theme") || "dark");
