@@ -6,6 +6,29 @@ const langButtons = document.querySelectorAll(".lang-btn");
 
 const translations = {
   en: {
+    "Gemelo Digital": "Digital Twin",
+    "Demostración de automatización industrial": "Industrial Automation Demonstration",
+    "Celda robótica de paletizado controlada mediante PLC": "PLC-Controlled Robotic Palletizing Cell",
+    "Visualización en tiempo real de una secuencia automatizada que integra lógica PLC Ladder, cinta transportadora, sensores, alarmas, conteo de producción y un robot industrial de manipulación.": "Real-time visualization of an automated sequence integrating PLC Ladder logic, conveyor belt, sensors, alarms, production counts and an industrial robot arm.",
+    "PLC Ladder": "PLC Ladder",
+    "Robótica industrial": "Industrial Robotics",
+    "Digital Twin": "Digital Twin",
+    "Sensores": "Sensors",
+    "Alarmas": "Alarms",
+    "Control de procesos": "Process Control",
+    "¿Qué demuestra esta solución?": "What does this solution demonstrate?",
+    "Integración entre PLC y robótica": "Integration between PLC and robotics",
+    "Secuencias automáticas de producción": "Automated production sequences",
+    "Monitoreo de sensores y actuadores": "Sensor and actuator monitoring",
+    "Alarmas y diagnóstico": "Alarms and diagnostics",
+    "Conteo de ciclos": "Cycle counting",
+    "Visualización de procesos en tiempo real": "Real-time process visualization",
+    "Posibilidad de adaptar el sistema a proyectos industriales reales": "Adaptability to real industrial projects",
+    '\"Esta demostración puede adaptarse a líneas de producción, estaciones de ensamblaje, sistemas de clasificación, celdas robotizadas y procesos de paletizado.\"': '"This demonstration can be adapted to production lines, assembly stations, sorting systems, robotic cells, and palletizing processes."',
+    "Ver demo completa": "View Full Demo",
+    "Solicitar un proyecto": "Request Project",
+    "Demo": "Demo",
+
     "Tecnología • Innovación • Soluciones": "Technology • Innovation • Solutions",
     "Inicio": "Home",
     "Servicios": "Services",
@@ -252,7 +275,7 @@ function translatePage(lang) {
   const iframe = document.querySelector('.simulator-iframe');
   if (iframe) {
     const activeTheme = localStorage.getItem("techsolutions-theme") || "dark";
-    const currentLangSrc = `simulador.html?lang=${lang}&theme=${activeTheme}`;
+    const currentLangSrc = `simulador.html?lang=${lang}&theme=${activeTheme}&preview=true`;
     if (iframe.getAttribute('src') !== currentLangSrc) {
       iframe.setAttribute('src', currentLangSrc);
     }
@@ -280,7 +303,7 @@ function setTheme(theme) {
   const iframe = document.querySelector('.simulator-iframe');
   if (iframe) {
     const currentLang = localStorage.getItem("techsolutions-language") || "es";
-    const targetSrc = `simulador.html?lang=${currentLang}&theme=${theme}`;
+    const targetSrc = `simulador.html?lang=${currentLang}&theme=${theme}&preview=true`;
     if (iframe.getAttribute('src') !== targetSrc) {
       iframe.setAttribute('src', targetSrc);
     }

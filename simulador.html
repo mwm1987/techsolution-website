@@ -189,6 +189,57 @@
         [data-theme="light"] .text-rose-400 {
             color: #dc2626 !important; /* rose-600 */
         }
+
+        /* Preview Mode Override Styles */
+        .preview-mode {
+            min-height: auto !important;
+            height: 480px !important;
+            overflow: hidden !important;
+            background-color: transparent !important;
+        }
+        .preview-mode header {
+            display: none !important;
+        }
+        .preview-mode main {
+            padding: 0 !important;
+            margin: 0 !important;
+            height: 100% !important;
+            display: block !important;
+        }
+        .preview-mode #ide-section {
+            display: none !important;
+        }
+        .preview-mode #sim-section {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+            border: 0 !important;
+            box-shadow: none !important;
+        }
+        .preview-mode #status-panel {
+            display: none !important;
+        }
+        .preview-mode #speed-panel {
+            display: none !important;
+        }
+        .preview-mode #alarm-panel {
+            display: none !important;
+        }
+        .preview-mode #controls-panel {
+            display: none !important;
+        }
+        .preview-mode footer {
+            display: none !important;
+        }
+        .preview-mode #sim-section > div:nth-of-type(3) {
+            background-color: transparent !important;
+            border-bottom: 0 !important;
+            padding-bottom: 0.5rem !important;
+        }
+        .preview-mode #production-panel {
+            margin-top: 0.5rem !important;
+        }
     </style>
 </head>
 <body class="text-slate-100 overflow-hidden min-h-screen flex flex-col justify-between select-none">
@@ -202,7 +253,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                        TwinControl Pro <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">v4.2.1</span>
+                        <span id="sim-title">TechSolutions Industrial Digital Twin</span> <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">v4.2.1</span>
                     </h1>
                     <p class="text-xs text-slate-400" id="sim-subtitle">Gemelo Digital: Programación de PLC Ladder y Control de Celda de Paletizado</p>
                 </div>
@@ -221,7 +272,7 @@
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         <!-- COLUMNA IZQUIERDA: Entorno IDE de Programación PLC (7 columnas) -->
-        <section class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[550px] relative">
+        <section id="ide-section" class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[550px] relative">
             
             <!-- Barra de Herramientas del IDE -->
             <div class="bg-slate-950 px-4 py-2 flex items-center justify-between border-b border-slate-800 text-xs select-none">
@@ -461,7 +512,7 @@
         </section>
 
         <!-- COLUMNA DERECHA: Celda de Paletizado con Brazo Robótico (5 columnas) -->
-        <section class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[550px]">
+        <section id="sim-section" class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[550px]">
             
             <!-- Header de la Celda -->
             <div class="bg-slate-950 px-4 py-3 border-b border-slate-800 flex items-center justify-between text-xs">
@@ -472,7 +523,7 @@
             </div>
 
             <!-- Panel Superior de Diagnóstico Robótico (Banderas/Variables del Robot) -->
-            <div class="bg-slate-900 p-3 grid grid-cols-4 gap-2 text-center text-[10px] border-b border-slate-800">
+            <div id="status-panel" class="bg-slate-900 p-3 grid grid-cols-4 gap-2 text-center text-[10px] border-b border-slate-800">
                 <div class="bg-slate-950/60 p-1.5 rounded border border-slate-800">
                     <div class="text-slate-500" id="panel-conveyor-lbl">CONVEYOR</div>
                     <div class="font-bold text-slate-300 transition-colors" id="panel-conveyor">DETENIDO</div>
@@ -493,7 +544,7 @@
 
             <!-- Panel de producción, velocidad y alarmas -->
             <div class="bg-slate-950/95 px-3 py-2 border-b border-slate-800 space-y-2">
-                <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+                <div id="production-panel" class="grid grid-cols-3 gap-2 text-center text-[10px]">
                     <div class="bg-slate-900/80 p-1.5 rounded border border-slate-800">
                         <div class="text-slate-500" id="counter-cycles-lbl">CICLOS OK</div>
                         <div class="font-bold text-emerald-400 text-base leading-tight" id="counter-cycles">0</div>
@@ -507,7 +558,7 @@
                         <div class="font-bold text-cyan-400 text-base leading-tight" id="counter-stack">0/3</div>
                     </div>
                 </div>
-                <div class="bg-slate-900/80 rounded border border-slate-800 px-3 py-2">
+                <div id="speed-panel" class="bg-slate-900/80 rounded border border-slate-800 px-3 py-2">
                     <div class="flex items-center justify-between gap-3 text-[10px] mb-1">
                         <span class="font-bold text-slate-400" id="speed-lbl">VELOCIDAD DE CINTA</span>
                         <span id="speed-readout" class="font-mono text-cyan-400 font-bold">0.65x</span>
@@ -516,7 +567,7 @@
                         <div class="h-full rounded-full bg-cyan-400/90" style="width:43%"></div>
                     </div>
                 </div>
-                <div class="bg-slate-900/80 rounded border border-slate-800 px-3 py-2 min-h-[44px]">
+                <div id="alarm-panel" class="bg-slate-900/80 rounded border border-slate-800 px-3 py-2 min-h-[44px]">
                     <div class="flex items-center justify-between text-[10px] mb-1">
                         <span class="font-bold text-slate-400" id="alarms-lbl">ALARMAS / EVENTOS</span>
                         <span class="text-[10px] text-cyan-400">Monitoreo automático</span>
@@ -542,7 +593,7 @@
                 </div>
             </div>
             <!-- Panel de secuencia automática -->
-            <div class="bg-slate-950 p-4 border-t border-slate-800 space-y-3">
+            <div id="controls-panel" class="bg-slate-950 p-4 border-t border-slate-800 space-y-3">
                 <div class="flex justify-between items-center">
                     <span class="text-xs font-bold text-slate-400">SECUENCIA AUTOMÁTICA DEL PROCESO</span>
                     <span class="text-[10px] text-cyan-400" id="manual-controls-title">Lectura continua de estados</span>
@@ -585,6 +636,7 @@
 
         const translations = {
             en: {
+                title: "TechSolutions Industrial Digital Twin",
                 subtitle: "Digital Twin: PLC Ladder Programming & Palletizing Cell Control",
                 lblSimStatus: "ACTIVE SIMULATION",
                 project: "PROJECT: Main_Palletizer_PLC",
@@ -642,6 +694,7 @@
                 footerText: "Educational Design: Industrial automation concepts, discrete PLC control, and robotics.",
                 footerTech: "Technologies: Canvas 2D + Ladder Engine + Inverse Kinematics",
                 // Logs
+                "Simulador de PLC Ladder TechSolutions iniciado correctamente.": "TechSolutions PLC Ladder Simulator started successfully.",
                 "Iniciando sistema de simulación...": "Starting simulation system...",
                 "ERROR: La bobina de activación del Robot O:0/1 no enclava. Referencia de Tag 'I:0/9' no válida. Habilite depuración.": "ERROR: Robot activation coil O:0/1 does not latch. Invalid Tag reference 'I:0/9'. Enable debugging.",
                 "Modo automático de depuración iniciado.": "Automated debugging mode started.",
@@ -691,6 +744,13 @@
             return theme === "light" ? lightColor : darkColor;
         }
 
+
+            // Check for preview mode
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('preview') === 'true') {
+                document.body.classList.add('preview-mode');
+            }
+
         function setSimulatorTheme(theme) {
             document.documentElement.setAttribute("data-theme", theme);
             if (theme === "light") {
@@ -731,6 +791,7 @@
             };
             
             // Headers & general
+            translateEl('sim-title', 'title');
             translateEl('sim-subtitle', 'subtitle');
             translateEl('lbl-sim-status', 'lblSimStatus');
             translateEl('sim-project-label', 'project');
@@ -2251,7 +2312,7 @@
                 initContinuousSimulation();
                 renderCanvas(); // primer frame visible inmediato
                 requestAnimationFrame(updateSimulation);
-                writeLog("Simulador de PLC Ladder TwinControl iniciado correctamente.", "success");
+                writeLog("Simulador de PLC Ladder TechSolutions iniciado correctamente.", "success");
             } catch (err) {
                 console.error(err);
                 const c = document.getElementById('robot-canvas');
