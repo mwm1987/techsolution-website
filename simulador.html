@@ -84,8 +84,8 @@
                     <div class="flex items-center gap-4">
                         <span class="font-semibold text-slate-400" id="sim-project-label">PROYECTO: <span class="text-slate-200" id="sim-project">Main_Palletizer_PLC</span></span>
                         <div class="flex items-center gap-1.5">
-                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" id="plc-status-dot"></span>
-                            <span class="text-slate-300 font-medium" id="plc-status-text">OFFLINE [FAULT]</span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" id="plc-status-dot"></span>
+                            <span class="text-slate-300 font-medium" id="plc-status-text">ONLINE [RUN]</span>
                         </div>
                     </div>
                     <!-- Botones del Programador en IDE -->
@@ -214,9 +214,7 @@
                             <span class="absolute -left-5 top-1 text-[10px] font-bold text-slate-600">2</span>
                             <div class="text-[10px] text-slate-500 mb-1 flex justify-between">
                                 <span id="rung2-comment">// LOGICA DE RECOGIDA - ACTIVAR ROBOT</span>
-                                <span class="text-rose-500 font-mono flex items-center gap-1 font-bold" id="rung2-status-tag">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> <span id="lbl-tag-error">ERROR DE TAG</span>
-                                </span>
+                                <span class="text-emerald-500/60 font-mono" id="rung2-status-tag">OK</span>
                             </div>
                             <div class="flex items-center h-12 relative">
                                 <div class="absolute left-0 right-0 h-0.5 bg-slate-700 -z-10" id="line-rung2"></div>
@@ -230,13 +228,13 @@
 
                                 <div class="w-8 h-0.5 bg-slate-700" id="link2-1"></div>
 
-                                <!-- CONTACTO ERRÓNEO: I:0/9 (No conectado) -> Se corregirá a I:0/2 -->
-                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-rose-500 rounded px-1.5 py-0.5 w-24 text-center cursor-default transition-all relative shadow-md shadow-rose-500/10" 
+                                <!-- CONTACTO PLC: I:0/2 -->
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-24 text-center cursor-default transition-all relative" 
                                      id="contact-bug">
-                                    <span class="text-[9px] text-rose-400 font-mono font-bold animate-pulse" id="contact-bug-tag">I:0/9 [!]</span>
-                                    <span class="text-[9px] text-slate-400 truncate w-full" id="contact-bug-desc">Tag_Erroneo</span>
+                                    <span class="text-[9px] text-emerald-400 font-mono font-bold" id="contact-bug-tag">I:0/2</span>
+                                    <span class="text-[9px] text-slate-400 truncate w-full" id="contact-bug-desc">Sensor_Caja</span>
                                     <span class="text-sm font-bold text-slate-500" id="state-I09">-[ ]-</span>
-                                    <div class="absolute -top-1 -right-1 bg-rose-500 w-2.5 h-2.5 rounded-full border border-slate-950" id="contact-bug-glow"></div>
+                                    <div class="absolute -top-1 -right-1 bg-rose-500 w-2.5 h-2.5 rounded-full border border-slate-950 hidden" id="contact-bug-glow"></div>
                                 </div>
 
                                 <div class="flex-1 h-0.5 bg-slate-700" id="link2-2"></div>
@@ -323,8 +321,8 @@
                 
                 <div class="bg-slate-950 px-3 py-2.5 border-b border-slate-800 flex items-center justify-between text-[10px]">
                     <span class="font-bold text-slate-200 tracking-wider" id="cell-title">VISTA DE LA CELDA INDUSTRIAL</span>
-                    <span class="bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded border border-rose-500/20 text-[9px] flex items-center gap-1" id="hazard-banner">
-                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> <span id="lbl-hazard-status">CELDA BLOQUEADA</span>
+                    <span class="bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 text-[9px] flex items-center gap-1" id="hazard-banner">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> <span id="lbl-hazard-status">CELDA OK</span>
                     </span>
                 </div>
 
@@ -377,7 +375,7 @@
                     <canvas id="robot-canvas" width="400" height="260" class="w-full h-full block"></canvas>
                     
                     <!-- Pantalla de Fallo Inicial -->
-                    <div id="plc-fault-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-[1px] flex flex-col justify-center items-center text-center p-4">
+                    <div id="plc-fault-overlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-[1px] flex flex-col justify-center items-center text-center p-4 hidden">
                         <div class="w-10 h-10 bg-rose-500/10 border border-rose-500 text-rose-500 rounded-full flex items-center justify-center mb-2 text-lg animate-bounce">
                             ⚠
                         </div>
@@ -408,7 +406,7 @@
         // Configuración del PLC
         const plc = {
             inputs: {
-                "I:0/0": false,
+                "I:0/0": true,  // Marcha activa por defecto
                 "I:0/1": true,  // Estop OK (NC)
                 "I:0/2": false, // Sensor presencia
                 "I:0/3": false, // Robot en zona de agarre
@@ -422,8 +420,8 @@
             timers: {
                 "T4:0": { acc: 0, pre: 1000, dn: false, en: false }
             },
-            rung2Contact: "I:0/9",
-            status: "FAULT",
+            rung2Contact: "I:0/2",
+            status: "RUN",
             mode: "AUTO"
         };
 
@@ -669,10 +667,10 @@
         };
 
         // Variables de Simulación del Programador Fantasma (Demo)
-        let demoPhase = 0;
+        let demoPhase = 9;
         let demoTimer = 0;
-        let compiled = false;
-        let downloaded = false;
+        let compiled = true;
+        let downloaded = true;
         let lastTime = 0;
 
         // --- SISTEMA DE LOGS Y TERMINAL ---
@@ -716,13 +714,13 @@
         // --- ENTORNO DE SIMULACIÓN Y EVENTOS ---
         function setMode(mode) {
             plc.mode = 'AUTO';
-            demoPhase = 0;
+            demoPhase = 9;
             demoTimer = 0;
             
             // Reset PLC state
-            plc.rung2Contact = "I:0/9";
-            plc.status = "FAULT";
-            plc.inputs["I:0/0"] = false;
+            plc.rung2Contact = "I:0/2";
+            plc.status = "RUN";
+            plc.inputs["I:0/0"] = true;
             plc.inputs["I:0/2"] = false;
             plc.inputs["I:0/3"] = false;
             plc.outputs["O:0/0"] = false;
@@ -734,8 +732,8 @@
                 plc.timers["T4:0"].en = false;
             }
 
-            compiled = false;
-            downloaded = false;
+            compiled = true;
+            downloaded = true;
             boxesOnConveyor = [];
             boxesOnPallet = [];
             
@@ -748,32 +746,32 @@
             process.cycleInProgress = false;
 
             // Reset UI states
-            document.getElementById('plc-status-dot').className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse";
-            document.getElementById('plc-status-text').textContent = "OFFLINE [FAULT]";
+            document.getElementById('plc-status-dot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+            document.getElementById('plc-status-text').textContent = "ONLINE [RUN]";
             
             const overlay = document.getElementById('plc-fault-overlay');
-            if (overlay) overlay.classList.remove('hidden');
+            if (overlay) overlay.classList.add('hidden');
             
-            document.getElementById('rung2-status-tag').className = "text-rose-500 font-mono flex items-center gap-1 font-bold";
-            document.getElementById('rung2-status-tag').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> ${t("ERROR DE TAG")}`;
+            document.getElementById('rung2-status-tag').className = "text-emerald-500/60 font-mono";
+            document.getElementById('rung2-status-tag').textContent = "OK";
             
-            document.getElementById('contact-bug-tag').className = "text-rose-400 font-mono font-bold animate-pulse";
-            document.getElementById('contact-bug-tag').textContent = "I:0/9 [!]";
+            document.getElementById('contact-bug-tag').className = "text-emerald-400 font-mono font-bold";
+            document.getElementById('contact-bug-tag').textContent = "I:0/2";
             
-            document.getElementById('contact-bug-desc').textContent = t("Tag_Erroneo");
+            document.getElementById('contact-bug-desc').textContent = t("Sensor_Caja");
             
             const contactBug = document.getElementById('contact-bug');
             if (contactBug) {
-                contactBug.className = "flex flex-col items-center justify-center bg-slate-950 border border-rose-500 rounded px-1.5 py-0.5 w-24 text-center cursor-default transition-all relative shadow-md shadow-rose-500/10";
+                contactBug.className = "flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 w-24 text-center cursor-default transition-all relative";
             }
             const contactBugGlow = document.getElementById('contact-bug-glow');
             if (contactBugGlow) {
-                contactBugGlow.classList.remove('hidden');
+                contactBugGlow.classList.add('hidden');
             }
 
             clearConsole();
             writeLog("Iniciando sistema de simulación...", "info");
-            writeLog("ERROR: La bobina de activación del Robot O:0/1 no enclava. Referencia de Tag 'I:0/9' no válida. Habilite depuración.", "error");
+            writeLog("Carga exitosa. PLC en modo ONLINE [RUN]. Marcha activada.", "success");
         }
 
         function toggleInput(address) {
