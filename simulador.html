@@ -66,14 +66,10 @@
                 </div>
             </div>
 
-            <!-- Selector de Modos de Simulación -->
-            <div class="flex items-center gap-2 bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
-                <button id="btn-mode-auto" onclick="setMode('AUTO')" class="px-3 py-1.5 font-semibold rounded transition-all bg-emerald-500 text-slate-950 shadow-md">
-                    Modo Demo (Programador)
-                </button>
-                <button id="btn-mode-manual" onclick="setMode('MANUAL')" class="px-3 py-1.5 font-semibold rounded transition-all text-slate-400 hover:text-white">
-                    Modo Libre (Interactivo)
-                </button>
+            <!-- Indicador de Ejecución -->
+            <div class="flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800 text-[10px] font-semibold text-slate-400">
+                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                <span id="lbl-sim-status">SIMULACIÓN ACTIVA</span>
             </div>
         </header>
 
@@ -235,8 +231,8 @@
                                 <div class="w-8 h-0.5 bg-slate-700" id="link2-1"></div>
 
                                 <!-- CONTACTO ERRÓNEO: I:0/9 (No conectado) -> Se corregirá a I:0/2 -->
-                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-rose-500 rounded px-1.5 py-0.5 w-24 text-center cursor-pointer transition-all hover:bg-slate-900 relative shadow-md shadow-rose-500/10" 
-                                     onclick="startInlineEditor()" id="contact-bug">
+                                <div class="flex flex-col items-center justify-center bg-slate-950 border border-rose-500 rounded px-1.5 py-0.5 w-24 text-center cursor-default transition-all relative shadow-md shadow-rose-500/10" 
+                                     id="contact-bug">
                                     <span class="text-[9px] text-rose-400 font-mono font-bold animate-pulse" id="contact-bug-tag">I:0/9 [!]</span>
                                     <span class="text-[9px] text-slate-400 truncate w-full" id="contact-bug-desc">Tag_Erroneo</span>
                                     <span class="text-sm font-bold text-slate-500" id="state-I09">-[ ]-</span>
@@ -386,34 +382,11 @@
                             ⚠
                         </div>
                         <h3 class="text-xs font-bold text-white mb-1" id="overlay-title">¡FALLO EN PROGRAMA LADDER!</h3>
-                        <p class="text-[10px] text-slate-400 max-w-[240px]" id="overlay-desc">El robot no recibe señal debido a la variable equivocada 'I:0/9' en el escalón 2. Modifícalo a 'I:0/2' o activa el modo Demo.</p>
-                        <button onclick="setMode('AUTO')" class="mt-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-3 py-1 rounded text-[10px] font-bold transition-colors" id="overlay-btn">
-                            Ejecutar Auto-Depuración
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Forzado manual de entradas -->
-                <div class="bg-slate-950 p-2.5 border-t border-slate-800 space-y-1.5">
-                    <div class="flex justify-between items-center text-[9px] text-slate-500">
-                        <span class="font-bold" id="manual-controls-title">MODO DEMO ACTIVO (LOCKED)</span>
-                    </div>
-                    <div class="grid grid-cols-4 gap-1">
-                        <button id="btn-force-start" onclick="forceManualInput('I:0/0')" class="bg-slate-900 border border-slate-800 text-[8px] text-slate-400 py-1.5 rounded hover:bg-slate-850 transition-colors flex flex-col items-center cursor-not-allowed">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500 mb-0.5" id="led-force-start"></span>
-                            <span id="lbl-force-start">I:0/0 Marcha</span>
-                        </button>
-                        <button id="btn-force-estop" onclick="forceManualInput('I:0/1')" class="bg-slate-900 border border-slate-800 text-[8px] text-slate-400 py-1.5 rounded hover:bg-slate-850 transition-colors flex flex-col items-center cursor-not-allowed">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mb-0.5" id="led-force-estop"></span>
-                            <span id="lbl-force-estop">I:0/1 E-Stop OK</span>
-                        </button>
-                        <button id="btn-force-sensor" onclick="forceManualInput('I:0/2')" class="bg-slate-900 border border-slate-800 text-[8px] text-slate-400 py-1.5 rounded hover:bg-slate-850 transition-colors flex flex-col items-center cursor-not-allowed">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500 mb-0.5" id="led-force-sensor"></span>
-                            <span id="lbl-force-sensor">I:0/2 Presencia</span>
-                        </button>
-                        <button id="btn-spawn-box" onclick="spawnManualBox()" class="bg-cyan-950/20 border border-cyan-800/40 text-[8px] text-cyan-400 py-1.5 rounded hover:bg-cyan-950/50 transition-colors font-bold cursor-not-allowed" id="lbl-spawn-box">
-                            ➕ Caja
-                        </button>
+                        <p class="text-[10px] text-slate-400 max-w-[240px] mb-3" id="overlay-desc">El robot no recibe señal debido a la variable equivocada 'I:0/9' en el escalón 2.</p>
+                        <div class="text-[9px] text-cyan-400 bg-cyan-950/30 px-3 py-1.5 rounded border border-cyan-800/30 font-semibold animate-pulse flex items-center gap-1.5" id="overlay-status">
+                            <svg class="animate-spin h-3.5 w-3.5 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>Auto-depuración en curso...</span>
+                        </div>
                     </div>
                 </div>
 
@@ -461,8 +434,7 @@
         const translations = {
             en: {
                 subtitle: "Digital Twin: PLC Ladder Programming & Palletizing Cell Control",
-                modeAuto: "Demo Mode (Programmer)",
-                modeManual: "Free Mode (Interactive)",
+                lblSimStatus: "ACTIVE SIMULATION",
                 project: "PROJECT: Main_Palletizer_PLC",
                 offlineFault: "OFFLINE [FAULT]",
                 onlineRun: "ONLINE [RUN]",
@@ -512,15 +484,9 @@
                 lblSpeed: "CONVEYOR SPEED",
                 lblAlarms: "ALARMS / EVENTS",
                 btnAck: "Acknowledge",
-                lblDemoLocked: "DEMO MODE ACTIVE (LOCKED)",
-                lblStationEnabled: "Station Controls Enabled",
-                btnForceStart: "I:0/0 Start",
-                btnForceEstop: "I:0/1 E-Stop OK",
-                btnForceSensor: "I:0/2 Presence",
-                btnSpawnBox: "➕ Box",
                 overlayTitle: "LADDER PROGRAM FAULT!",
-                overlayDesc: "The robot receives no signal due to the wrong variable 'I:0/9' on Rung 2. Change it to 'I:0/2' or enable Demo Mode.",
-                overlayBtn: "Run Auto-Debugging",
+                overlayDesc: "The robot receives no signal due to the wrong variable 'I:0/9' on Rung 2.",
+                overlayStatus: "Auto-debugging in progress...",
                 footerText: "Educational Design: Industrial automation concepts, discrete PLC control, and robotics.",
                 footerTech: "Technologies: Canvas 2D + Ladder Engine + Inverse Kinematics",
                 // Logs
@@ -591,8 +557,8 @@
             if (currentLang !== 'en') return;
             
             document.getElementById('sim-subtitle').textContent = translations.en.subtitle;
-            document.getElementById('btn-mode-auto').textContent = translations.en.modeAuto;
-            document.getElementById('btn-mode-manual').textContent = translations.en.modeManual;
+            const lblSimStatus = document.getElementById('lbl-sim-status');
+            if (lblSimStatus) lblSimStatus.textContent = translations.en.lblSimStatus;
             document.getElementById('sim-project-label').innerHTML = `PROJECT: <span class="text-slate-200" id="sim-project">Main_Palletizer_PLC</span>`;
             
             document.getElementById('btn-compile-text').textContent = translations.en.compile;
@@ -639,14 +605,16 @@
             document.getElementById('lbl-alarms').textContent = translations.en.lblAlarms;
             document.getElementById('btn-ack').textContent = translations.en.btnAck;
             
-            document.getElementById('lbl-force-start').textContent = translations.en.btnForceStart;
-            document.getElementById('lbl-force-estop').textContent = translations.en.btnForceEstop;
-            document.getElementById('lbl-force-sensor').textContent = translations.en.btnForceSensor;
-            document.getElementById('lbl-spawn-box').textContent = translations.en.btnSpawnBox;
-            
             document.getElementById('overlay-title').textContent = translations.en.overlayTitle;
             document.getElementById('overlay-desc').textContent = translations.en.overlayDesc;
-            document.getElementById('overlay-btn').textContent = translations.en.overlayBtn;
+            
+            const overlayStatus = document.getElementById('overlay-status');
+            if (overlayStatus) {
+                overlayStatus.innerHTML = `
+                    <svg class="animate-spin h-3.5 w-3.5 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>${translations.en.overlayStatus}</span>
+                `;
+            }
             
             document.getElementById('footer-text').textContent = translations.en.footerText;
             document.getElementById('footer-tech').innerHTML = `Technologies: <span class="text-cyan-400 font-bold">Canvas 2D</span> + <span class="text-emerald-400 font-bold">Ladder Engine</span> + <span class="text-yellow-400 font-bold">Inverse Kinematics</span>`;
@@ -746,85 +714,77 @@
 
         // --- ENTORNO DE SIMULACIÓN Y EVENTOS ---
         function setMode(mode) {
-            plc.mode = mode;
+            plc.mode = 'AUTO';
             demoPhase = 0;
             demoTimer = 0;
             
-            const btnAuto = document.getElementById('btn-mode-auto');
-            const btnManual = document.getElementById('btn-mode-manual');
-            const manualTitle = document.getElementById('manual-controls-title');
-            
-            const forceStart = document.getElementById('btn-force-start');
-            const forceEstop = document.getElementById('btn-force-estop');
-            const forceSensor = document.getElementById('btn-force-sensor');
-            const spawnBoxBtn = document.getElementById('btn-spawn-box');
-
-            if (mode === 'AUTO') {
-                btnAuto.className = "px-3 py-1.5 font-semibold rounded bg-emerald-500 text-slate-950 shadow-md";
-                btnManual.className = "px-3 py-1.5 font-semibold rounded text-slate-400 hover:text-white";
-                manualTitle.textContent = t("MODO DEMO ACTIVO (LOCKED)");
-                
-                // Deshabilitar forzados manuales
-                [forceStart, forceEstop, forceSensor, spawnBoxBtn].forEach(btn => {
-                    btn.classList.add('cursor-not-allowed');
-                });
-                
-                // Reset PLC state
-                plc.rung2Contact = "I:0/9";
-                plc.status = "FAULT";
-                compiled = false;
-                downloaded = false;
-                document.getElementById('plc-fault-overlay').classList.remove('hidden');
-                document.getElementById('rung2-status-tag').className = "text-rose-500 font-mono flex items-center gap-1 font-bold";
-                document.getElementById('rung2-status-tag').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> ${t("ERROR DE TAG")}`;
-                document.getElementById('contact-bug-tag').className = "text-rose-400 font-mono font-bold animate-pulse";
-                document.getElementById('contact-bug-tag').textContent = "I:0/9 [!]";
-                document.getElementById('contact-bug-desc').textContent = t("Tag_Erroneo");
-                document.getElementById('contact-bug').classList.add('border-rose-500');
-                
-                clearConsole();
-                writeLog("Iniciando sistema de simulación...", "info");
-                writeLog("ERROR: La bobina de activación del Robot O:0/1 no enclava. Referencia de Tag 'I:0/9' no válida. Habilite depuración.", "error");
-            } else {
-                btnManual.className = "px-3 py-1.5 font-semibold rounded bg-cyan-500 text-slate-950 shadow-md";
-                btnAuto.className = "px-3 py-1.5 font-semibold rounded text-slate-400 hover:text-white";
-                manualTitle.textContent = t("Controles de Estación Habilitados");
-                
-                // Habilitar forzados manuales
-                [forceStart, forceEstop, forceSensor, spawnBoxBtn].forEach(btn => {
-                    btn.classList.remove('cursor-not-allowed');
-                });
-                
-                document.getElementById('virtual-cursor').style.opacity = 0;
-                writeLog("Modo manual habilitado. Puedes editar el tag erróneo haciendo clic en él.", "blue");
+            // Reset PLC state
+            plc.rung2Contact = "I:0/9";
+            plc.status = "FAULT";
+            plc.inputs["I:0/0"] = false;
+            plc.inputs["I:0/2"] = false;
+            plc.inputs["I:0/3"] = false;
+            plc.outputs["O:0/0"] = false;
+            plc.outputs["O:0/1"] = false;
+            plc.outputs["O:0/2"] = false;
+            if (plc.timers["T4:0"]) {
+                plc.timers["T4:0"].acc = 0;
+                plc.timers["T4:0"].dn = false;
+                plc.timers["T4:0"].en = false;
             }
+
+            compiled = false;
+            downloaded = false;
+            boxesOnConveyor = [];
+            boxesOnPallet = [];
+            
+            robot.state = "IDLE";
+            robot.x = HOME_X;
+            robot.y = HOME_Y;
+            robot.targetX = HOME_X;
+            robot.targetY = HOME_Y;
+            robot.hasBox = false;
+            process.cycleInProgress = false;
+
+            // Reset UI states
+            document.getElementById('plc-status-dot').className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse";
+            document.getElementById('plc-status-text').textContent = "OFFLINE [FAULT]";
+            
+            const overlay = document.getElementById('plc-fault-overlay');
+            if (overlay) overlay.classList.remove('hidden');
+            
+            document.getElementById('rung2-status-tag').className = "text-rose-500 font-mono flex items-center gap-1 font-bold";
+            document.getElementById('rung2-status-tag').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> ${t("ERROR DE TAG")}`;
+            
+            document.getElementById('contact-bug-tag').className = "text-rose-400 font-mono font-bold animate-pulse";
+            document.getElementById('contact-bug-tag').textContent = "I:0/9 [!]";
+            
+            document.getElementById('contact-bug-desc').textContent = t("Tag_Erroneo");
+            
+            const contactBug = document.getElementById('contact-bug');
+            if (contactBug) {
+                contactBug.className = "flex flex-col items-center justify-center bg-slate-950 border border-rose-500 rounded px-1.5 py-0.5 w-24 text-center cursor-default transition-all relative shadow-md shadow-rose-500/10";
+            }
+            const contactBugGlow = document.getElementById('contact-bug-glow');
+            if (contactBugGlow) {
+                contactBugGlow.classList.remove('hidden');
+            }
+
+            clearConsole();
+            writeLog("Iniciando sistema de simulación...", "info");
+            writeLog("ERROR: La bobina de activación del Robot O:0/1 no enclava. Referencia de Tag 'I:0/9' no válida. Habilite depuración.", "error");
         }
 
         function toggleInput(address) {
-            if (plc.mode === 'AUTO') return;
-            if (address === 'I:0/1') {
-                plc.inputs[address] = !plc.inputs[address];
-                document.getElementById('led-force-estop').className = `w-1.5 h-1.5 rounded-full mb-0.5 ${plc.inputs[address] ? 'bg-emerald-500' : 'bg-slate-500'}`;
-            } else if (address === 'I:0/0') {
-                plc.inputs[address] = !plc.inputs[address];
-                document.getElementById('led-force-start').className = `w-1.5 h-1.5 rounded-full mb-0.5 ${plc.inputs[address] ? 'bg-emerald-500' : 'bg-slate-500'}`;
-            } else if (address === 'I:0/2') {
-                plc.inputs[address] = !plc.inputs[address];
-                document.getElementById('led-force-sensor').className = `w-1.5 h-1.5 rounded-full mb-0.5 ${plc.inputs[address] ? 'bg-emerald-500' : 'bg-slate-500'}`;
-            }
+            // Disabled in animation-only mode
         }
 
         function forceManualInput(address) {
-            toggleInput(address);
+            // Disabled in animation-only mode
         }
 
         function spawnManualBox() {
-            if (plc.mode === 'AUTO') return;
-            if (!plc.inputs["I:0/1"]) return; // Emergency stop active
-            if (boxesOnConveyor.length === 0 && !process.cycleInProgress) {
-                boxesOnConveyor.push({ x: 0, y: conveyor.y - 12, w: 24, h: 24 });
-                writeLog("Caja generada en cinta transportadora de manera manual.", "info");
-            }
+            // Disabled in animation-only mode
         }
 
         // --- COMPILACIÓN E INSTALACIÓN DEL PROGRAMA LADDER ---
@@ -1165,6 +1125,11 @@
                                 process.palletsCompleted++;
                                 writeLog(`¡PALLET Nº ${process.palletsCompleted} COMPLETADO! Despachando a almacén.`, "success");
                                 boxesOnPallet = [];
+                                
+                                // Reset simulation after 4 seconds for continuous loop animation
+                                setTimeout(() => {
+                                    setMode('AUTO');
+                                }, 4000);
                             }
                         }
                     }
