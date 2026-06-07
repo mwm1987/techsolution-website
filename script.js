@@ -251,7 +251,8 @@ function translatePage(lang) {
 
   const iframe = document.querySelector('.simulator-iframe');
   if (iframe) {
-    const currentLangSrc = `simulador.html?lang=${lang}`;
+    const activeTheme = localStorage.getItem("techsolutions-theme") || "dark";
+    const currentLangSrc = `simulador.html?lang=${lang}&theme=${activeTheme}`;
     if (iframe.getAttribute('src') !== currentLangSrc) {
       iframe.setAttribute('src', currentLangSrc);
     }
@@ -273,6 +274,19 @@ function setTheme(theme) {
 
   if (themeToggle) {
     themeToggle.textContent = theme === "dark" ? "☾" : "☀";
+  }
+
+  // Synchronize with simulator iframe dynamically without reload
+  const iframe = document.querySelector('.simulator-iframe');
+  if (iframe) {
+    const currentLang = localStorage.getItem("techsolutions-language") || "es";
+    const targetSrc = `simulador.html?lang=${currentLang}&theme=${theme}`;
+    if (iframe.getAttribute('src') !== targetSrc) {
+      iframe.setAttribute('src', targetSrc);
+    }
+    if (iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'setTheme', theme: theme }, '*');
+    }
   }
 }
 
