@@ -52,7 +52,7 @@
         }
     </style>
 </head>
-<body class="text-slate-100 overflow-hidden min-h-screen flex flex-col justify-between p-2">
+<body class="text-slate-100 overflow-hidden min-h-screen flex flex-col justify-between select-none">
 
     <!-- Cabecera Principal -->
     <header class="bg-slate-900 border-b border-slate-800 p-4 shadow-md">
@@ -65,56 +65,50 @@
                     <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                         TwinControl Pro <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">v4.2.1</span>
                     </h1>
-                    <p class="text-xs text-slate-400">Gemelo Digital: Programación de PLC Ladder y Control de Celda de Paletizado</p>
+                    <p class="text-xs text-slate-400" id="sim-subtitle">Gemelo Digital: Programación de PLC Ladder y Control de Celda de Paletizado</p>
                 </div>
             </div>
-
-            <!-- Indicador de Ejecución -->
-            <div class="flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800 text-[10px] font-semibold text-slate-400">
-                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                <span id="lbl-sim-status">SIMULACIÓN ACTIVA</span>
+            <!-- Estado fijo de simulación -->
+            <div class="flex items-center gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
+                <span class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-400/20" id="lbl-sim-status">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    Simulación continua automática
+                </span>
             </div>
         </div>
     </header>
 
     <!-- Contenido Principal -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-2 grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         <!-- COLUMNA IZQUIERDA: Entorno IDE de Programación PLC (7 columnas) -->
-        <section class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[560px] relative">
+        <section class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[550px] relative">
             
             <!-- Barra de Herramientas del IDE -->
             <div class="bg-slate-950 px-4 py-2 flex items-center justify-between border-b border-slate-800 text-xs select-none">
                 <div class="flex items-center gap-4">
-                    <span class="font-semibold text-slate-400">PROYECTO: <span class="text-slate-200">Main_Palletizer_PLC</span></span>
+                    <span class="font-semibold text-slate-400" id="sim-project-label">PROYECTO: <span class="text-slate-200">Main_Palletizer_PLC</span></span>
                     <div class="flex items-center gap-1.5">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" id="plc-status-dot"></span>
                         <span class="text-slate-300 font-medium" id="plc-status-text">ONLINE [RUN]</span>
                     </div>
                 </div>
-                <!-- Botones del Programador en IDE -->
                 <div class="flex items-center gap-2">
-                    <button id="btn-compile" onclick="triggerCompile()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700 flex items-center gap-1 transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"/></svg>
-                        <span id="btn-compile-text">Compilar</span>
-                    </button>
-                    <button id="btn-download" onclick="triggerDownload()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded flex items-center gap-1 transition-colors font-medium">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        <span id="btn-download-text">Cargar a PLC</span>
-                    </button>
+                    <span class="bg-slate-800 text-slate-300 px-3 py-1 rounded border border-slate-700 text-[11px]">Modo solo visual</span>
+                    <span class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded border border-emerald-500/20 text-[11px]">Secuencia automática en ejecución</span>
                 </div>
             </div>
 
             <!-- Pestañas de Trabajo -->
             <div class="bg-slate-900 border-b border-slate-800 flex text-xs select-none">
                 <div class="bg-slate-950 text-emerald-400 px-4 py-2 border-r border-slate-800 border-b-2 border-b-emerald-500 font-medium flex items-center gap-1.5 cursor-pointer">
-                    <span class="text-[10px]">📊</span> <span id="tab-ladder">Routine [Ladder]</span>
+                    <span class="text-[10px]">📊</span> <span id="tab-ladder">MainRoutine [Ladder]</span>
                 </div>
                 <div class="text-slate-400 px-4 py-2 border-r border-slate-800 hover:bg-slate-800/40 cursor-pointer flex items-center gap-1.5">
                     <span class="text-[10px]">🔑</span> <span id="tab-global">Variables_Globales</span>
                 </div>
                 <div class="text-slate-400 px-4 py-2 border-r border-slate-800 hover:bg-slate-800/40 cursor-pointer flex items-center gap-1.5">
-                    <span class="text-[10px]">⚙️</span> <span id="tab-hw">HW_Configuration</span>
+                    <span class="text-[10px]">⚙️</span> <span id="tab-hw">Config_Hardware</span>
                 </div>
             </div>
 
@@ -133,7 +127,7 @@
                     <div class="relative group">
                         <span class="absolute -left-5 top-0 text-[10px] font-bold text-slate-600">0</span>
                         <div class="text-xs text-slate-500 mb-1 flex justify-between">
-                            <span><span id="rung0-comment">// CONTROL DE MARCHA Y MOTOR CINTA</span></span>
+                            <span id="rung0-comment">// CONTROL DE MARCHA Y CINTA TRANSPORTADORA</span>
                             <span class="text-[10px] text-emerald-500/60 font-mono">OK</span>
                         </div>
                         <div class="flex items-center h-20 relative">
@@ -141,20 +135,20 @@
                             <div class="absolute left-0 right-0 h-0.5 bg-slate-700 -z-10" id="line-rung0"></div>
                             
                             <!-- Contacto I:0/0 (Marcha) -->
-                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-24 text-center cursor-pointer transition-all hover:bg-slate-900" 
-                                 onclick="toggleInput('I:0/0')" id="contact-I00">
+                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-24 text-center transition-all" 
+                                  id="contact-I00">
                                 <span class="text-[10px] text-slate-400 font-mono">I:0/0</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-btn-marcha" title="Boton_Marcha">Btn_Marcha</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" title="Boton_Marcha" id="tag-btn-marcha">Btn_Marcha</span>
                                 <span class="text-lg font-bold select-none text-slate-500 transition-colors" id="state-I00">-[ ]-</span>
                             </div>
 
                             <div class="w-12 h-0.5 bg-slate-700" id="link0-1"></div>
 
                             <!-- Contacto I:0/1 (E-Stop NC) -->
-                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-24 text-center cursor-pointer transition-all hover:bg-slate-900" 
-                                 onclick="toggleInput('I:0/1')" id="contact-I01">
+                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-24 text-center transition-all" 
+                                  id="contact-I01">
                                 <span class="text-[10px] text-slate-400 font-mono">I:0/1</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-estop" title="Parada_Emerg">Estop_OK</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" title="Parada_Emerg" id="tag-estop">Estop_OK</span>
                                 <span class="text-lg font-bold select-none text-slate-500 transition-colors" id="state-I01">-[/]-</span>
                             </div>
 
@@ -163,7 +157,7 @@
                             <!-- Bobina O:0/0 (Motor Cinta) -->
                             <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-28 text-center" id="coil-O00">
                                 <span class="text-[10px] text-slate-400 font-mono">O:0/0</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-motor-cinta" title="Motor_Cinta">Motor_Cinta</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" title="Motor_Cinta" id="tag-motor-cinta">Motor_Cinta</span>
                                 <span class="text-lg font-bold text-slate-500 transition-colors" id="state-O00">-( )-</span>
                             </div>
                         </div>
@@ -173,17 +167,17 @@
                     <div class="relative group">
                         <span class="absolute -left-5 top-0 text-[10px] font-bold text-slate-600">1</span>
                         <div class="text-xs text-slate-500 mb-1 flex justify-between">
-                            <span><span id="rung1-comment">// DETECCION SENSOR & RETARDO DE ARRANQUE</span></span>
+                            <span id="rung1-comment">// DETECCION DE PIEZA Y DETENCION DE CINTA</span>
                             <span class="text-[10px] text-emerald-500/60 font-mono">OK</span>
                         </div>
                         <div class="flex items-center h-20 relative">
                             <div class="absolute left-0 right-0 h-0.5 bg-slate-700 -z-10" id="line-rung1"></div>
                             
                             <!-- Contacto I:0/2 (Sensor Presencia) -->
-                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-24 text-center cursor-pointer transition-all hover:bg-slate-900" 
-                                 onclick="toggleInput('I:0/2')" id="contact-I02">
+                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-24 text-center transition-all" 
+                                  id="contact-I02">
                                 <span class="text-[10px] text-slate-400 font-mono">I:0/2</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-sensor-caja" title="Sensor_Caja">Sensor_Caja</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" title="Sensor_Caja" id="tag-sensor-caja">Sensor_Caja</span>
                                 <span class="text-lg font-bold select-none text-slate-500 transition-colors" id="state-I02">-[ ]-</span>
                             </div>
 
@@ -208,7 +202,7 @@
                             <!-- Bobina Virtual T4:0/DN (Temporizado Listo) -->
                             <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-24 text-center" id="coil-T40">
                                 <span class="text-[10px] text-slate-400 font-mono">T4:0/DN</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-temp-listo" title="Temporizado">Temp_Listo</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" title="Temporizado" id="tag-temp-listo">Temp_Listo</span>
                                 <span class="text-lg font-bold text-slate-500 transition-colors" id="state-T40">-( )-</span>
                             </div>
                         </div>
@@ -218,8 +212,10 @@
                     <div class="relative group">
                         <span class="absolute -left-5 top-0 text-[10px] font-bold text-slate-600">2</span>
                         <div class="text-xs text-slate-500 mb-1 flex justify-between">
-                            <span><span id="rung2-comment">// LOGICA DE RECOGIDA - ACTIVAR ROBOT</span></span>
-                            <span class="text-[10px] text-emerald-500/60 font-mono" id="rung2-status-tag">OK</span>
+                            <span id="rung2-comment">// LOGICA DE RECOGIDA - ACTIVAR ROBOT</span>
+                            <span class="text-[10px] text-rose-500/80 font-mono flex items-center gap-1" id="rung2-status-tag">
+                                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> ERROR DE TAG
+                            </span>
                         </div>
                         <div class="flex items-center h-20 relative">
                             <div class="absolute left-0 right-0 h-0.5 bg-slate-700 -z-10" id="line-rung2"></div>
@@ -233,13 +229,13 @@
 
                             <div class="w-12 h-0.5 bg-slate-700" id="link2-1"></div>
 
-                            <!-- CONTACTO DE ALIMENTACIÓN: I:0/2 -->
-                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-32 text-center cursor-pointer transition-all hover:bg-slate-900 shadow-none relative" 
-                                 onclick="toggleInput('I:0/2')" id="contact-bug">
-                                <span class="text-[10px] text-emerald-400 font-mono font-bold" id="contact-bug-tag">I:0/2</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-sensor-caja-rung2">Sensor_Caja</span>
+                            <!-- CONTACTO ERRÓNEO: I:0/9 (No conectado) - Se corregirá a I:0/2 -->
+                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-rose-500/50 rounded px-2 py-1 w-32 text-center transition-all shadow-lg shadow-rose-500/5 relative" 
+                                  id="contact-bug">
+                                <span class="text-[10px] text-rose-400 font-mono font-bold animate-pulse" id="contact-bug-tag">I:0/9 [!]</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" id="contact-bug-desc">Tag_Indefinido</span>
                                 <span class="text-lg font-bold select-none text-slate-500 transition-colors" id="state-I09">-[ ]-</span>
-                                <div class="absolute -top-1 -right-1 bg-rose-500 w-2.5 h-2.5 rounded-full border border-slate-950 hidden" id="contact-bug-glow"></div>
+                                <div class="absolute -top-1 -right-1 bg-rose-500 w-2.5 h-2.5 rounded-full border border-slate-950" id="contact-bug-glow"></div>
                             </div>
 
                             <div class="flex-1 h-0.5 bg-slate-700" id="link2-2"></div>
@@ -247,7 +243,7 @@
                             <!-- Bobina O:0/1 (Activar Robot) -->
                             <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-28 text-center" id="coil-O01">
                                 <span class="text-[10px] text-slate-400 font-mono">O:0/1</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-activar-robot" title="Iniciar_Rob">Activar_Rob</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" title="Iniciar_Rob" id="tag-activar-robot">Activar_Rob</span>
                                 <span class="text-lg font-bold text-slate-500 transition-colors" id="state-O01">-( )-</span>
                             </div>
                         </div>
@@ -257,7 +253,7 @@
                     <div class="relative group">
                         <span class="absolute -left-5 top-0 text-[10px] font-bold text-slate-600">3</span>
                         <div class="text-xs text-slate-500 mb-1 flex justify-between">
-                            <span><span id="rung3-comment">// CONTROL SUCCION DE PINZA (VENTOSA)</span></span>
+                            <span id="rung3-comment">// CONTROL DE LA ELECTROVALVULA DE SUCCION</span>
                             <span class="text-[10px] text-emerald-500/60 font-mono">OK</span>
                         </div>
                         <div class="flex items-center h-20 relative">
@@ -266,17 +262,17 @@
                             <!-- Contacto O:0/1 (Robot en movimiento) -->
                             <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-24 text-center cursor-not-allowed" id="contact-O01-suct">
                                 <span class="text-[10px] text-slate-400 font-mono">O:0/1</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-rob-activo" title="Brazo_Activo">Rob_Activo</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" title="Brazo_Activo" id="tag-rob-activo">Rob_Activo</span>
                                 <span class="text-lg font-bold text-slate-500" id="state-O01-suct">-[ ]-</span>
                             </div>
 
                             <div class="w-12 h-0.5 bg-slate-700" id="link3-1"></div>
 
                             <!-- Contacto de Realimentación Robot en Zona de Agarre -->
-                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-28 text-center cursor-pointer transition-all hover:bg-slate-900" 
-                                 onclick="toggleInput('I:0/3')" id="contact-I03">
+                            <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-28 text-center transition-all" 
+                                  id="contact-I03">
                                 <span class="text-[10px] text-slate-400 font-mono">I:0/3</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-en-zona" title="Zona_Caja">En_Zona_Pick</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" title="Zona_Caja" id="tag-en-zona">En_Zona_Pick</span>
                                 <span class="text-lg font-bold select-none text-slate-500 transition-colors" id="state-I03">-[ ]-</span>
                             </div>
 
@@ -285,7 +281,7 @@
                             <!-- Bobina O:0/2 (Electroválvula Ventosa) -->
                             <div class="flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-28 text-center" id="coil-O02">
                                 <span class="text-[10px] text-slate-400 font-mono">O:0/2</span>
-                                <span class="text-[10px] text-slate-300 truncate w-full" id="tag-ventosa" title="Succion">Ventosa_On</span>
+                                <span class="text-[10px] text-slate-300 truncate w-full" title="Succion" id="tag-ventosa">Ventosa_On</span>
                                 <span class="text-lg font-bold text-slate-500 transition-colors" id="state-O02">-( )-</span>
                             </div>
                         </div>
@@ -327,7 +323,7 @@
         </section>
 
         <!-- COLUMNA DERECHA: Celda de Paletizado con Brazo Robótico (5 columnas) -->
-        <section class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[560px]">
+        <section class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[550px]">
             
             <!-- Header de la Celda -->
             <div class="bg-slate-950 px-4 py-3 border-b border-slate-800 flex items-center justify-between text-xs">
@@ -378,12 +374,14 @@
                         <span class="font-bold text-slate-400" id="speed-lbl">VELOCIDAD DE CINTA</span>
                         <span id="speed-readout" class="font-mono text-cyan-400 font-bold">0.65x</span>
                     </div>
-                    <input id="speed-slider" type="range" min="0.20" max="1.50" step="0.05" value="0.65" oninput="setConveyorSpeed(this.value)" class="w-full accent-cyan-400">
+                    <div class="w-full h-3 rounded-full bg-slate-700 overflow-hidden border border-slate-600/60">
+                        <div class="h-full rounded-full bg-cyan-400/90" style="width:43%"></div>
+                    </div>
                 </div>
                 <div class="bg-slate-900/80 rounded border border-slate-800 px-3 py-2 min-h-[44px]">
                     <div class="flex items-center justify-between text-[10px] mb-1">
                         <span class="font-bold text-slate-400" id="alarms-lbl">ALARMAS / EVENTOS</span>
-                        <button onclick="ackAlarms()" class="text-[10px] text-cyan-400 hover:text-cyan-300" id="btn-ack">Reconocer</button>
+                        <span class="text-[10px] text-cyan-400">Monitoreo automático</span>
                     </div>
                     <div id="alarm-list" class="space-y-1 text-[10px] font-mono text-slate-500">
                         <div class="text-emerald-400">Sistema sin alarmas activas.</div>
@@ -400,15 +398,35 @@
                     <div class="w-16 h-16 bg-rose-500/10 border border-rose-500 text-rose-500 rounded-full flex items-center justify-center mb-4 text-2xl animate-bounce">
                         ⚠
                     </div>
-                    <h3 class="text-lg font-bold text-white mb-1">¡ERROR EN EL LADDER PLC!</h3>
-                    <p class="text-xs text-slate-400 max-w-sm">La lógica del robot no funciona debido a un tag inválido (I:0/9) en el escalón 2. Esperando depuración del programador...</p>
-                    <button onclick="setMode('AUTO')" class="mt-4 bg-cyan-500 hover:bg-cyan-400 text-slate-950 px-4 py-2 rounded text-xs font-bold transition-colors">
-                        Auto-Depurar con Programador
-                    </button>
+                    <h3 class="text-lg font-bold text-white mb-1" id="overlay-title">¡ERROR EN EL LADDER PLC!</h3>
+                    <p class="text-xs text-slate-400 max-w-sm" id="overlay-desc">La lógica del robot no funciona debido a un tag inválido (I:0/9) en el escalón 2. Esperando depuración del programador...</p>
+                    <div class="mt-4 text-[11px] text-cyan-300" id="overlay-status">Reiniciando secuencia automática...</div>
                 </div>
             </div>
-
-
+            <!-- Panel de secuencia automática -->
+            <div class="bg-slate-950 p-4 border-t border-slate-800 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-400">SECUENCIA AUTOMÁTICA DEL PROCESO</span>
+                    <span class="text-[10px] text-cyan-400" id="manual-controls-title">Lectura continua de estados</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div class="bg-slate-900 border border-slate-800 text-[10px] text-slate-300 p-2 rounded flex flex-col items-center">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 mb-1" id="led-force-start"></span>
+                        Marcha automática
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 text-[10px] text-slate-300 p-2 rounded flex flex-col items-center">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 mb-1" id="led-force-estop"></span>
+                        Seguridad OK
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 text-[10px] text-slate-300 p-2 rounded flex flex-col items-center">
+                        <span class="w-2 h-2 rounded-full bg-slate-500 mb-1" id="led-force-sensor"></span>
+                        Sensor de caja
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 text-[10px] text-cyan-300 p-2 rounded flex flex-col items-center justify-center font-bold">
+                        Operación continua
+                    </div>
+                </div>
+            </div>
 
         </section>
 
@@ -419,13 +437,14 @@
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
             <p><span id="footer-text">Diseño Pedagógico: Conceptos de automatización industrial, control discreto de PLC y robótica.</span></p>
             <p class="flex items-center gap-1">
-                <span id="footer-tech">Tecnologías: <span class="text-cyan-400 font-bold">Canvas 2D</span> + <span class="text-emerald-400 font-bold">Ladder Engine</span> + <span class="text-yellow-400 font-bold">Cinemática Inversa</span></span>
+                <span id="footer-tech"><span id="footer-tech">Tecnologías: <span class="text-cyan-400 font-bold">Canvas 2D</span> + <span class="text-emerald-400 font-bold">Ladder Engine</span> + <span class="text-yellow-400 font-bold">Cinemática Inversa</span></span></span>
             </p>
         </div>
     </footer>
 
     <!-- LOGICA DEL SIMULADOR -->
     <script>
+
         const translations = {
             en: {
                 subtitle: "Digital Twin: PLC Ladder Programming & Palletizing Cell Control",
@@ -501,7 +520,7 @@
                 "Caja asegurada. Transportando a pallet.": "Box secured. Transporting to pallet.",
                 "Caja posicionada en pallet. Desconectando electroválvula.": "Box positioned on pallet. Disconnecting electrovalve.",
                 "Ciclo completado con éxito.": "Cycle completed successfully.",
-                "¡PALLET Nº ... COMPLETADO! Despachando a almacén.": "PALLET Nº ... COMPLETED! Dispatching to warehouse.",
+                "¡PALLET Nº ... COMPLETADO! Despachando a almacén.": "PALLET N. ... COMPLETED! Dispatching to warehouse.",
                 "Modo manual habilitado. Puedes editar el tag erróneo haciendo clic en él.": "Manual mode enabled. You can edit the faulty tag by clicking on it.",
                 "Caja generada en cinta transportadora de manera manual.": "Box spawned on conveyor belt manually.",
                 "No se puede cargar al PLC: Compile el proyecto primero y solucione errores.": "Cannot download to PLC: Compile the project first and resolve errors.",
@@ -601,8 +620,8 @@
         // CONFIGURACIÓN E INICIALIZACIÓN DEL PLC
         const plc = {
             inputs: {
-                "I:0/0": true,  // Pulsador Marcha (Activado por defecto para simulación continua)
-                "I:0/1": true,  // Parada de Emergencia (NC - True significa OK)
+                "I:0/0": false, // Pulsador Marcha
+                "I:0/1": true,  // Parada de Emergencia (NC - True significa OK, False es Emergencia)
                 "I:0/2": false, // Sensor presencia caja
                 "I:0/3": false, // Robot en zona de agarre (Feedback del Robot)
                 "I:0/9": false  // Entrada errónea (No conectada a nada)
@@ -620,9 +639,9 @@
                     en: false
                 }
             },
-            rung2Contact: "I:0/2", // Corrección aplicada para inicio directo en marcha
-            status: "RUN",         // Corrección aplicada para inicio directo en marcha
-            mode: "AUTO"           // Bucle automático continuo
+            rung2Contact: "I:0/2", // El contacto defectuoso inicial en el rung 2
+            status: "RUN",        // Inicia en modo fallo esperando depuración del programador
+            mode: "SIM"           // AUTO (Demo programador) o MANUAL (Usuario interactivo)
         };
 
         // CONFIGURACIÓN DE LA ANIMACIÓN Y ROBOTICA
@@ -686,7 +705,7 @@
 
         // Hilos de ejecución / Tiempo
         let lastTime = performance.now();
-        let demoPhase = 8; // Ejecución continua directa, saltando la demo del programador
+        let demoPhase = 0; // Control de la animación de demostración del programador
         let demoTimer = 0;
         let compilationProgress = 0;
 
@@ -1913,13 +1932,7 @@
         }
 
         // --- INTERACCIONES Y FORZADO MANUAL ---
-        function toggleInput(tag) {
-            if (plc.mode !== "MANUAL") {
-                writeLog("Acción denegada. Cambia a 'Modo Libre (Interactivo)' para modificar las entradas manualmente.", "warn");
-                return;
-            }
-            toggleInputLogic(tag);
-        }
+        function toggleInput(tag) { return; }
 
         function toggleInputLogic(tag) {
             if (tag === "I:0/9") {
@@ -1931,21 +1944,9 @@
             }
         }
 
-        function forceManualInput(tag) {
-            if (plc.mode !== "MANUAL") {
-                writeLog("Acción restringida. Cambia a 'Modo Libre' para forzar entradas mediante botones.", "warn");
-                return;
-            }
-            toggleInputLogic(tag);
-        }
+        function forceManualInput(tag) { return; }
 
-        function spawnManualBox() {
-            if (plc.status !== "RUN") {
-                writeLog("No se puede generar cajas. El PLC se encuentra detenido o en estado de fallo.", "error");
-                return;
-            }
-            spawnBox();
-        }
+        function spawnManualBox() { return; }
 
         // --- INTERFAZ EDITORA INLINE ---
         function showInlineEditor() {
@@ -1976,7 +1977,7 @@
                 tagEl.innerHTML = "I:0/2";
                 tagEl.className = "text-[10px] text-emerald-400 font-mono font-bold";
                 document.getElementById('contact-bug-desc').innerHTML = "Sensor_Caja";
-                document.getElementById('contact-bug').className = "flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-32 text-center cursor-pointer transition-all hover:bg-slate-900 shadow-none relative";
+                document.getElementById('contact-bug').className = "flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-32 text-center transition-all shadow-none relative";
                 document.getElementById('contact-bug-glow').classList.add('hidden');
 
                 writeLog("Edición de Tag realizada con éxito en el búfer de programación local.", "success");
@@ -1989,81 +1990,11 @@
 
         // --- MANEJO DE ESTADOS DE LA INTERFAZ ---
         function setMode(newMode) {
-            plc.mode = newMode;
-            
-            const btnAuto = document.getElementById('btn-mode-auto');
-            const btnManual = document.getElementById('btn-mode-manual');
-            const controlTitle = document.getElementById('manual-controls-title');
-
-            if (newMode === "AUTO") {
-                btnAuto.className = "px-4 py-1.5 text-xs font-semibold rounded-md transition-all bg-emerald-500 text-slate-950 shadow-md";
-                btnManual.className = "px-4 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-400 hover:text-white";
-                controlTitle.innerHTML = "Modo Demo Activo (Lectura)";
-                
-                // Reiniciar secuencia de demo
-                resetSimulation();
-                writeLog("Modo de demostración de programador iniciado.", "info");
-            } else {
-                btnManual.className = "px-4 py-1.5 text-xs font-semibold rounded-md transition-all bg-emerald-500 text-slate-950 shadow-md";
-                btnAuto.className = "px-4 py-1.5 text-xs font-semibold rounded-md transition-all text-slate-400 hover:text-white";
-                controlTitle.innerHTML = "Controles de Entrada Activos (Escritura)";
-                
-                // Ocultar cursor de demo
-                document.getElementById('virtual-cursor').style.opacity = "0";
-                writeLog("Modo Libre activo. Ya puedes hacer clic en los contactos del PLC para forzar entradas.", "success");
-            }
+            writeLog("La interfaz está en modo de solo visualización continua.", "info");
         }
 
         function resetSimulation() {
-            // Revertir PLC a fallo inicial
-            plc.rung2Contact = "I:0/9";
-            plc.status = "FAULT";
-            plc.inputs["I:0/0"] = false;
-            plc.inputs["I:0/1"] = true; // Parada emerg. OK
-            plc.inputs["I:0/2"] = false;
-            plc.inputs["I:0/3"] = false;
-            plc.inputs["I:0/9"] = false;
-            plc.outputs["O:0/0"] = false;
-            plc.outputs["O:0/1"] = false;
-            plc.outputs["O:0/2"] = false;
-            plc.timers["T4:0"].acc = 0;
-            plc.timers["T4:0"].dn = false;
-
-            // Revertir diseño del contacto con bug en el DOM
-            const tagEl = document.getElementById('contact-bug-tag');
-            tagEl.innerHTML = "I:0/9 [!]";
-            tagEl.className = "text-[10px] text-rose-400 font-mono font-bold animate-pulse";
-            document.getElementById('contact-bug-desc').innerHTML = "Tag_Indefinido";
-            document.getElementById('contact-bug').className = "flex flex-col items-center justify-center bg-slate-950 border border-rose-500/50 rounded px-2 py-1 w-32 text-center cursor-pointer transition-all hover:bg-slate-900 shadow-lg shadow-rose-500/5 relative";
-            document.getElementById('contact-bug-glow').classList.remove('hidden');
-            document.getElementById('rung2-status-tag').className = "text-[10px] text-rose-500/80 font-mono flex items-center gap-1";
-            document.getElementById('rung2-status-tag').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span> ERROR DE TAG';
-
-            // Resetear robot
-            robot.x = HOME_X;
-            robot.y = HOME_Y;
-            robot.targetX = HOME_X;
-            robot.targetY = HOME_Y;
-            robot.state = "IDLE";
-            robot.hasBox = false;
-            robot.suctionActive = false;
-
-            boxesOnConveyor = [];
-            boxesOnPallet = [];
-            process.cycleInProgress = false;
-            process.boxReady = false;
-            process.cyclesCompleted = 0;
-            process.palletsCompleted = 0;
-            process.noBoxTimer = 0;
-            process.alarms = [];
-            setConveyorSpeed(document.getElementById('speed-slider')?.value || conveyor.speed);
-
-            demoPhase = 0;
-            demoTimer = 0;
-
-            clearConsole();
-            writeLog("Sistema de gemelo digital reiniciado.", "info");
-            writeLog("ERROR EN EJECUCIÓN: El escalón 2 del PLC no arranca por error de direccionamiento (I:0/9).", "error");
+            initContinuousSimulation();
         }
 
         // Cambia visualmente los LEDs de la estación física inferior
@@ -2079,6 +2010,59 @@
             ledSensor.className = `w-2.5 h-2.5 rounded-full mb-1 ${plc.inputs["I:0/2"] ? "bg-yellow-500 shadow-md shadow-yellow-500/80" : "bg-slate-600"}`;
         }
 
+        
+        function initContinuousSimulation() {
+            plc.rung2Contact = "I:0/2";
+            plc.status = "RUN";
+            plc.mode = "SIM";
+            plc.inputs["I:0/0"] = true;
+            plc.inputs["I:0/1"] = true;
+            plc.inputs["I:0/2"] = false;
+            plc.inputs["I:0/3"] = false;
+            plc.inputs["I:0/9"] = false;
+            plc.outputs["O:0/0"] = false;
+            plc.outputs["O:0/1"] = false;
+            plc.outputs["O:0/2"] = false;
+            plc.timers["T4:0"].acc = 0;
+            plc.timers["T4:0"].dn = false;
+            plc.timers["T4:0"].en = false;
+            process.cycleInProgress = false;
+            process.boxReady = false;
+            process.cyclesCompleted = 0;
+            process.palletsCompleted = 0;
+            process.noBoxTimer = 0;
+            process.alarms = [];
+            robot.x = HOME_X;
+            robot.y = HOME_Y;
+            robot.targetX = HOME_X;
+            robot.targetY = HOME_Y;
+            robot.state = "HOME";
+            robot.hasBox = false;
+            boxesOnConveyor = [];
+            boxesOnPallet = [];
+            setConveyorSpeed(conveyor.speed);
+            const statusText = document.getElementById('plc-status-text');
+            const statusDot = document.getElementById('plc-status-dot');
+            if (statusText) statusText.innerHTML = 'ONLINE [RUN]';
+            if (statusDot) statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+            const rung2 = document.getElementById('rung2-status-tag');
+            if (rung2) { rung2.className = 'text-[10px] text-emerald-500/60 font-mono'; rung2.innerHTML = 'OK'; }
+            const bugTag = document.getElementById('contact-bug-tag');
+            const bugDesc = document.getElementById('contact-bug-desc');
+            const bugGlow = document.getElementById('contact-bug-glow');
+            const bugCard = document.getElementById('contact-bug');
+            if (bugTag) { bugTag.innerHTML = 'I:0/2'; bugTag.className = 'text-[10px] text-emerald-400 font-mono font-bold'; }
+            if (bugDesc) bugDesc.innerHTML = 'Sensor_Caja';
+            if (bugGlow) bugGlow.classList.add('hidden');
+            if (bugCard) bugCard.className = 'flex flex-col items-center justify-center bg-slate-950 border border-slate-800 rounded px-2 py-1 w-32 text-center transition-all shadow-none relative';
+            const overlay = document.getElementById('plc-fault-overlay');
+            if (overlay) overlay.classList.add('hidden');
+            clearConsole();
+            writeLog('Sistema en modo simulación continua automática.', 'success');
+            writeLog('Secuencia inicializada: cinta, sensor, robot y pallet listos.', 'info');
+            spawnBox();
+        }
+
         // INICIAR BUCLE SIN DEPENDER DE TAILWIND/CDN
         // Antes estaba en window.onload; si Tailwind o Google Fonts tardan o fallan,
         // el canvas queda negro porque el onload no dispara. Esta versión arranca apenas el DOM está listo.
@@ -2087,8 +2071,8 @@
             if (__twinControlStarted) return;
             __twinControlStarted = true;
             try {
-                setConveyorSpeed(document.getElementById('speed-slider')?.value || conveyor.speed);
                 translateUI();
+                initContinuousSimulation();
                 renderCanvas(); // primer frame visible inmediato
                 requestAnimationFrame(updateSimulation);
                 writeLog("Simulador de PLC Ladder TwinControl iniciado correctamente.", "success");
