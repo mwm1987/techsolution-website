@@ -169,6 +169,26 @@
             border-color: var(--border-color) !important;
             color: var(--text-muted) !important;
         }
+
+        [data-theme="light"] .bg-slate-950\/95 {
+            background-color: var(--bg-panel) !important;
+            border-color: var(--border-color) !important;
+        }
+        [data-theme="light"] .hover\:bg-slate-800\/40:hover {
+            background-color: rgba(226, 232, 240, 0.5) !important;
+        }
+        [data-theme="light"] .text-emerald-400 {
+            color: #059669 !important; /* emerald-600 */
+        }
+        [data-theme="light"] .text-cyan-400 {
+            color: #0891b2 !important; /* cyan-600 */
+        }
+        [data-theme="light"] .text-yellow-400 {
+            color: #d97706 !important; /* amber-600 */
+        }
+        [data-theme="light"] .text-rose-400 {
+            color: #dc2626 !important; /* rose-600 */
+        }
     </style>
 </head>
 <body class="text-slate-100 overflow-hidden min-h-screen flex flex-col justify-between select-none">
@@ -234,13 +254,12 @@
             <!-- Área Principal del Diagrama Ladder -->
             <div class="flex-1 overflow-y-auto p-6 bg-slate-950/40 relative code-font">
                 
-                <!-- Riel Izquierdo (Power Rail) -->
-                <div class="absolute left-6 top-0 bottom-0 w-1 bg-slate-700 rounded" id="left-rail"></div>
-                <!-- Riel Derecho (Neutral Rail) -->
-                <div class="absolute right-6 top-0 bottom-0 w-1 bg-slate-800 rounded"></div>
-
                 <!-- Lista de Rungs (Escalones) -->
                 <div class="space-y-10 pl-6 pr-6 relative z-10">
+                    <!-- Riel Izquierdo (Power Rail) -->
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-700 rounded" id="left-rail"></div>
+                    <!-- Riel Derecho (Neutral Rail) -->
+                    <div class="absolute right-0 top-0 bottom-0 w-1 bg-slate-800 rounded"></div>
                     
                     <!-- RUNGO 0: Control de la Cinta Transportadora -->
                     <div class="relative group">
@@ -1032,9 +1051,9 @@
             // Cambiar iluminación de los rieles de potencia
             const leftRail = document.getElementById('left-rail');
             if (plc.status === "RUN") {
-                leftRail.className = "absolute left-6 top-0 bottom-0 w-1 bg-emerald-500 shadow-md shadow-emerald-500/50 rounded";
+                leftRail.className = "absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-md shadow-emerald-500/50 rounded";
             } else {
-                leftRail.className = "absolute left-6 top-0 bottom-0 w-1 bg-slate-700 rounded";
+                leftRail.className = "absolute left-0 top-0 bottom-0 w-1 bg-slate-700 rounded";
             }
 
             // Actualizar textos y color de contactos individuales
@@ -1280,8 +1299,8 @@
 
             // Piso con perspectiva tipo fábrica
             const floor = ctx.createLinearGradient(0, 120, 0, h);
-            floor.addColorStop(0, '#111827');
-            floor.addColorStop(1, '#030712');
+            floor.addColorStop(0, getThemeColor('#111827', '#e2e8f0'));
+            floor.addColorStop(1, getThemeColor('#030712', '#cbd5e1'));
             ctx.fillStyle = floor;
             ctx.beginPath();
             ctx.moveTo(0, 120);
@@ -1291,7 +1310,7 @@
             ctx.closePath();
             ctx.fill();
 
-            ctx.strokeStyle = 'rgba(34, 211, 238, 0.08)';
+            ctx.strokeStyle = getThemeColor('rgba(34, 211, 238, 0.08)', 'rgba(8, 145, 178, 0.16)');
             ctx.lineWidth = 1;
             for (let i = -6; i < 14; i++) {
                 ctx.beginPath();
