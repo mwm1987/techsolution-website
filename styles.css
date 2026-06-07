@@ -1448,7 +1448,7 @@ img {
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow);
-  height: 640px;
+  height: 700px;
   width: 100%;
   margin-top: 2rem;
 }
@@ -1465,7 +1465,7 @@ img {
 /* Responsive adjustments */
 @media (max-width: 1050px) {
   .simulator-frame-wrap {
-    height: 1240px;
+    height: 1300px;
   }
   .capabilities-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

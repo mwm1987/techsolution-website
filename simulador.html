@@ -49,7 +49,7 @@
         }
     </style>
 </head>
-<body class="text-slate-100 overflow-x-hidden min-h-screen flex flex-col justify-between p-2">
+<body class="text-slate-100 overflow-hidden min-h-screen flex flex-col justify-between p-2">
 
     <div class="w-full flex-1 flex flex-col gap-4">
         <!-- Cabecera Principal -->
@@ -673,6 +673,7 @@
         let demoTimer = 0;
         let compiled = false;
         let downloaded = false;
+        let lastTime = 0;
 
         // --- SISTEMA DE LOGS Y TERMINAL ---
         function writeLog(text, type = "info") {
