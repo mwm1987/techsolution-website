@@ -1303,29 +1303,30 @@
         function drawCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Cinta transportadora
-            ctx.fillStyle = "#1e293b";
-            ctx.fillRect(10, conveyor.y, 140, 15);
-            ctx.fillStyle = "#0f172a";
-            ctx.strokeRect(10, conveyor.y, 140, 15);
+            // Cinta transportadora - Estructura original con rieles
+            ctx.fillStyle = "#78350f"; // Marrón de la estructura original (mismo color que el pallet)
+            ctx.fillRect(10, conveyor.y, 140, 4); // Riel superior
+            ctx.fillRect(10, conveyor.y + 11, 140, 4); // Riel inferior
 
             // Rodillos
             ctx.fillStyle = "#475569";
             for (let rx = 20; rx < 150; rx += 25) {
                 ctx.beginPath();
-                ctx.arc(rx, conveyor.y + 7, 5, 0, Math.PI * 2);
+                ctx.arc(rx, conveyor.y + 7, 4, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // Sensor de presencia óptico (LED + Beam)
-            ctx.fillStyle = plc.inputs["I:0/2"] ? "#10b981" : "#ef4444";
-            ctx.fillRect(conveyor.sensorX - 3, conveyor.y - 30, 6, 8);
+            // Sensor de presencia óptico original (Soporte + LED + Haz)
+            ctx.fillStyle = "#78350f"; // Soporte físico de la cinta
+            ctx.fillRect(conveyor.sensorX - 4, conveyor.y - 15, 8, 15);
+            ctx.fillStyle = plc.inputs["I:0/2"] ? "#10b981" : "#ef4444"; // Indicador LED
+            ctx.fillRect(conveyor.sensorX - 2, conveyor.y - 23, 4, 8);
             
             // Haz del sensor
             ctx.strokeStyle = plc.inputs["I:0/2"] ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.2)";
             ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(conveyor.sensorX, conveyor.y - 22);
+            ctx.moveTo(conveyor.sensorX, conveyor.y - 15);
             ctx.lineTo(conveyor.sensorX, conveyor.y);
             ctx.stroke();
 
@@ -1363,9 +1364,19 @@
             const wristX = shoulderX + L2 * Math.cos(ik.theta1 + ik.theta2);
             const wristY = shoulderY + L2 * Math.sin(ik.theta1 + ik.theta2);
 
-            // Dibujar líneas del brazo robótico (Estructura)
+            // Soporte de Base
+            ctx.fillStyle = "#334155";
+            ctx.fillRect(BASE_X - 16, BASE_Y, 32, 50);
+
+            // Base circular del robot (Cilindro/Cúpula de la base original)
+            ctx.fillStyle = "#0284c7";
+            ctx.beginPath();
+            ctx.arc(BASE_X, BASE_Y, 15, 0, Math.PI, true);
+            ctx.fill();
+
+            // Dibujar líneas del brazo robótico (Estructura de 12px de grosor original)
             ctx.strokeStyle = "#38bdf8"; // Azul robótico
-            ctx.lineWidth = 8;
+            ctx.lineWidth = 12;
             ctx.lineCap = "round";
             
             ctx.beginPath();
@@ -1374,16 +1385,13 @@
             ctx.lineTo(wristX, wristY);
             ctx.stroke();
 
-            // Articulaciones mecánicas
+            // Articulaciones mecánicas (Eslabones y círculos originales)
             ctx.fillStyle = "#0284c7";
             ctx.beginPath();
             ctx.arc(BASE_X, BASE_Y, 8, 0, Math.PI*2);
-            ctx.arc(shoulderX, shoulderY, 6, 0, Math.PI*2);
+            ctx.arc(shoulderX, shoulderY, 8, 0, Math.PI*2);
+            ctx.arc(wristX, wristY, 6, 0, Math.PI*2);
             ctx.fill();
-
-            // Soporte de Base
-            ctx.fillStyle = "#334155";
-            ctx.fillRect(BASE_X - 16, BASE_Y, 32, 50);
 
             // Caja en gripper (Si la tiene agarrada)
             if (robot.hasBox) {
